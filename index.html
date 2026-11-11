@@ -217,13 +217,23 @@ td.r,th.r{white-space:nowrap}
 .facts2 dt{font:600 .7rem/1.6 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .facts2 dd{margin:0;color:var(--fg)}
 @media (max-width:560px){.facts2{grid-template-columns:1fr}.facts2 dt{margin-top:4px}}
+.ctag{display:inline-block;font:700 .72rem/1.2 var(--f-body);padding:3px 8px;border-radius:999px;white-space:nowrap;margin:2px 0}
+.cyes{background:#dff3e4;color:#17643a;border:1px solid #9fd5b0}
+.cpart{background:#fff1d6;color:#7a5200;border:1px solid #f0cf86}
+.cno{background:#fde2e1;color:#9b1c1c;border:1px solid #f3a9a6}
+.cunk{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+@media (prefers-color-scheme:dark){.cyes{background:#123d25;color:#9fe2b6;border-color:#24603d}.cpart{background:#3d2e0d;color:#f5d38a;border-color:#6b5218}.cno{background:#451616;color:#f7b4b0;border-color:#7a2a2a}}
+.facts2 .cdt{color:var(--fg)} .facts2 .cdd{font-weight:600}
+.cline{font-size:.86rem;margin-top:-4px}
+.card .price .ctag{justify-self:end}
+@media (max-width:560px){.card .price .ctag{justify-self:start}}
 </style>
 
 <div class="wrap">
   <header>
     <span class="eyebrow">NeurIPS 2026 · ICC Sydney · 4 pessoas · atualizado em 10/11/2026</span>
     <h1>Onde ficar em Sydney de 3 a 16 de dezembro</h1>
-    <p class="lede">Hospedagem para <b>4 pessoas: um casal e dois solteiros</b>. Requisitos: <b>pelo menos 3 camas</b> (o casal divide uma; sofá-cama não conta) e, em apartamento ou casa, <b>pelo menos 2 chuveiros</b>, porque não há limpeza durante a estadia. Banheiro compartilhado de hostel serve, porque o hostel limpa todo dia. Os valores são o total das 13 noites com taxas, em reais, com o valor original ao lado; "por pessoa" inclui o transporte quando o lugar não fica a pé do ICC. Preços mudam rápido: confira antes de reservar.</p>
+    <p class="lede">Hospedagem para <b>4 pessoas: um casal e dois solteiros</b>. Requisitos: <b>pelo menos 3 camas</b> (o casal divide uma; sofá-cama não conta) e, em apartamento ou casa, <b>pelo menos 2 chuveiros</b>, porque não há limpeza durante a estadia. Banheiro compartilhado de hostel serve, porque o hostel limpa todo dia. Os valores são o total das 13 noites com taxas, em reais, com o valor original ao lado; "por pessoa" inclui o transporte quando o lugar não fica a pé do ICC. Cada opção mostra a política de cancelamento: <span class="ctag cyes">grátis</span> <span class="ctag cpart">com condições</span> <span class="ctag cno">não reembolsável</span> <span class="ctag cunk">a confirmar</span>. Preços mudam rápido: confira antes de reservar.</p>
     <div class="facts">
       <span class="fact"><b>13 noites</b> · 3 → 16/dez</span>
       <span class="fact"><b>4 pessoas</b> · casal + 2 solteiros · 3+ camas</span>
@@ -265,6 +275,7 @@ td.r,th.r{white-space:nowrap}
           <button data-f="ok" aria-pressed="true">Servem para o grupo</button>
           <button data-f="walk" aria-pressed="false">Servem, a pé</button>
           <button data-f="ride" aria-pressed="false">Servem, com transporte</button>
+          <button data-f="free" aria-pressed="false">Servem, cancelamento grátis</button>
           <button data-f="all" aria-pressed="false">Todas</button>
         </div>
         <label class="sort">Ordenar por
@@ -352,7 +363,7 @@ td.r,th.r{white-space:nowrap}
 
 <script>
 const P=[
- {id:15,g:4,baths:2,rooms:2,beds:3,ok:true,k:"ride",name:"Urban Rest North Sydney",area:"North Sydney, 1B Doohat Ave",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Cada quarto tem banheiro.",total:18532,cur:"BRL",rate:"9.0/10 (104) Booking",src:"Hoteis.com (cupom)",go:"A pé até a estação North Sydney (5 min). Trem T1 ou T9 até Town Hall (8 min). A pé até o ICC (10 min). Total: 25 a 30 min.",lat:-33.8395,lon:151.2065,url:"https://www.hoteis.com/ho2905468640/urban-rest-north-sydney-apartments-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a4",q:"1B Doohat Ave North Sydney",canc:"Hoteis.com: não reembolsável R$ 20.393 sem cupom; reembolso total até 26/11 por R$ 22.569. Parcela em até 12x sem juros.",note:"Hoteis.com em 10/11 (sua conta): Two Bedroom para 4 adultos, 10% OFF já aplicado, restam 4. Com o seu cupom: R$ 18.531,88. A versão com vista custa R$ 21.395. O apartamento de 3 quartos está esgotado. Hóspedes relatam fechadura quebrada e um vazamento (Trip.com)."},
+ {id:15,g:4,baths:2,rooms:2,beds:3,ok:true,k:"ride",name:"Urban Rest North Sydney",area:"North Sydney, 1B Doohat Ave",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Cada quarto tem banheiro.",total:18532,cur:"BRL",rate:"9.0/10 (104) Booking",src:"Hoteis.com (cupom)",go:"A pé até a estação North Sydney (5 min). Trem T1 ou T9 até Town Hall (8 min). A pé até o ICC (10 min). Total: 25 a 30 min.",lat:-33.8395,lon:151.2065,url:"https://www.hoteis.com/ho2905468640/urban-rest-north-sydney-apartments-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a4",q:"1B Doohat Ave North Sydney",canc:"Não reembolsável no preço com cupom (R$ 18.531,88) e no de R$ 20.393. Com reembolso total até 26/11: R$ 22.569.",note:"Hoteis.com em 10/11 (sua conta): Two Bedroom para 4 adultos, 10% OFF já aplicado, restam 4. Com o seu cupom: R$ 18.531,88. A versão com vista custa R$ 21.395. O apartamento de 3 quartos está esgotado. Hóspedes relatam fechadura quebrada e um vazamento (Trip.com)."},
  {id:16,g:4,one:true,baths:1,rooms:3,beds:3,ok:true,k:"walk",name:"The Johns, casa em Ultimo",area:"Ultimo / Glebe",type:"3 quartos com 3 camas (tipos não informados). 1 banheiro. 108 m², com pátio.",total:6969,rate:"4.8/5 (12) Google",src:"Stayz",go:"A pé, 10 min.",lat:-33.8790,lon:151.1915,url:"https://www.google.com/travel/hotels/entity/ChkQ1ozQgYz-x95sGg0vZy8xMXp5d3l2bmJrEAI",q:"The Johns, terraço de 3 quartos Ultimo / Glebe Sydney",canc:"Não informado.",note:"Confirme os tipos de cama. Preço do Stayz, encontrado pelo Google Hotels."},
  {id:17,g:4,one:true,baths:1,rooms:3,beds:4,ok:true,k:"walk",name:"Cozy Retreat, perto da Central",area:"Central / Surry Hills",type:"3 quartos com 4 camas (tipos não informados). 1 banheiro.",total:5557,rate:"4.4/5 (12) Google",src:"Hostaway (site direto)",go:"A pé, 15 min.",lat:-33.8804,lon:151.2092,url:"https://www.google.com/travel/hotels/entity/ChkQutXlssPLgM94Gg0vZy8xMXp6bGx5bm1yEAI",q:"Cozy Retreat, perto da Central Central / Surry Hills Sydney",canc:"Não informado.",note:"Confirme os tipos de cama. Só 12 avaliações. Reserva pelo site direto (Hostaway)."},
  {id:18,g:4,one:true,baths:1.5,rooms:3,beds:4,ok:true,k:"walk",name:"Casa em Darlington",area:"Chippendale / Darlington",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Quarto 3: 1 queen. 1 banheiro e 1 lavabo. Garagem.",total:5098,rate:"4.52/5 (66) Airbnb",src:"Airbnb",go:"A pé, 30 min. Ou ônibus pela City Rd.",lat:-33.8931,lon:151.1906,url:"https://www.airbnb.com/rooms/988742713831636805?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Casa perto da Sydney Uni Chippendale / Darlington Sydney",canc:"Não informado.",note:"No Stayz, a mesma casa custa A$ 6.261."},
@@ -429,7 +440,7 @@ function makeMarker(p){
   const icon=L.divIcon({className:"",html:`<span class="lmk ${p.k}${p.serve?" ok":""}">${p.id}</span>`,iconSize:[28,28],iconAnchor:[14,14]});
   const m=L.marker([p.lat,p.lon],{icon,title:p.name,keyboard:true});
   const per=pp(p);
-  m.bindTooltip(`<b>${p.id}. ${p.name}</b><br>${p.area} · ${rb(p)}<br>${per?R(per)+" por pessoa":"—"} · ${p.serve?"serve para o grupo":p.ok?"1 chuveiro para 4":"só 2 camas"}`,{direction:"top",offset:[0,-14]});
+  m.bindTooltip(`<b>${p.id}. ${p.name}</b><br>${p.area} · ${rb(p)}<br>${per?R(per)+" por pessoa":"—"} · ${CANC[cancK(p)][0]} · ${p.serve?"serve para o grupo":p.ok?"1 chuveiro para 4":"só 2 camas"}`,{direction:"top",offset:[0,-14]});
   m.on("click",()=>select(p.id,true));
   MK[p.id]=m;return m;
 }
@@ -446,6 +457,13 @@ P.forEach(p=>{p.km=hav(ICC,p);p.brlTotal=p.total?brl(p.total,p.cur):null;p.trBrl
 const plural=(n,a,b)=>n+" "+(n===1?a:b);
 const rb=p=>(p.rooms===1&&p.bx==="estúdio"?"estúdio":plural(p.rooms,"quarto","quartos"))+" · "+(p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas"))+(p.bx&&p.bx!=="estúdio"?" "+p.bx:"")+" · "+bath(p);
 const bath=p=>p.baths==="c"?"banheiro compartilhado":p.baths==null?"banheiros a confirmar":(()=>{const n=Math.floor(p.baths),h=p.baths%1;return plural(n,"banheiro","banheiros")+(h?" + lavabo":"")})();
+const cancK=p=>{const c=(p.canc||"").toLowerCase();
+  if(!c||c.startsWith("não informado"))return "unk";
+  if(c.startsWith("não reembolsável"))return "no";
+  if(/grátis|reembolso total|reembolsável até/.test(c))return /24 h|só nas primeiras/.test(c)?"part":"yes";
+  return "part"};
+const CANC={yes:["Cancelamento grátis","cyes"],part:["Cancelamento com condições","cpart"],no:["Não reembolsável","cno"],unk:["Cancelamento: a confirmar","cunk"]};
+const cancTag=p=>{const [t,c]=CANC[cancK(p)];return `<span class="ctag ${c}" title="${(p.canc||"").replace(/"/g,"&quot;")}">${t}</span>`};
 const km=p=>p.km.toFixed(1).replace(".",",")+" km do ICC";
 const pp=p=>p.total?Math.round((p.brlTotal+p.trBrl)/4):null;
 P.forEach(p=>{p.serve=!!p.ok&&!p.one});
@@ -463,14 +481,15 @@ function card(p){
      <div class="rb"><span>🚪 ${plural(p.rooms,"quarto","quartos")}${p.bx==="estúdio"?" (estúdio)":""}</span><span>🛏 ${p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas")}${p.bx&&p.bx!=="estúdio"?" "+p.bx:""}</span><span>🚿 ${bath(p)}</span></div>
      <div class="meta">${p.area} · ${km(p)} em linha reta</div>
      <dl class="facts2">
+       <dt class="cdt">Cancelamento</dt><dd class="cdd">${p.canc}</dd>
        <dt>Camas</dt><dd>${p.type}</dd>
        <dt>Trajeto até o ICC</dt><dd>${p.go}</dd>
-       <dt>Cancelamento</dt><dd>${p.canc}</dd>
        ${p.note?`<dt>Atenção</dt><dd>${p.note}</dd>`:""}
      </dl>
      <div class="tags">${okTag}${kTag}<span class="tag src">${p.src}</span></div>
    </div>
    <div class="price">
+     ${cancTag(p)}
      <span class="pp">${R(per)}</span><span class="n">por pessoa${p.trBrl?", com transporte":""}</span>
      <span class="tt">${fmt(p)} no total</span>
      <span class="n">${fmtOrig(p)} · 13 noites</span>
@@ -491,7 +510,7 @@ function select(id,fromMap){
 }
 
 const state={f:"ok",sort:"price"};
-const SHOW={all:()=>true,ok:p=>p.serve,walk:p=>p.serve&&p.k==="walk",ride:p=>p.serve&&p.k==="ride"};
+const SHOW={all:()=>true,ok:p=>p.serve,free:p=>p.serve&&cancK(p)==="yes",walk:p=>p.serve&&p.k==="walk",ride:p=>p.serve&&p.k==="ride"};
 const SORT={price:(a,b)=>(a.brlTotal+a.trBrl)-(b.brlTotal+b.trBrl),dist:(a,b)=>a.km-b.km,rate:(a,b)=>b.score-a.score};
 function render(){
   document.querySelectorAll(".filters button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===state.f?"true":"false"));
@@ -508,7 +527,7 @@ function costTable4(){
   const rows=P.filter(p=>p.serve).map(p=>({p,d:p.brlTotal,t:p.trBrl,sum:p.brlTotal+p.trBrl})).sort((a,b)=>a.sum-b.sum);
   const max=Math.max(...rows.map(r=>r.sum));
   document.querySelector("#costtable4 tbody").innerHTML=rows.map(r=>`<tr>
-    <td><b>${r.p.id}.</b> ${r.p.name} <span class="rbs">${rb(r.p)}</span>${links(r.p)}<div class="bar ${r.p.k}" style="width:${(r.sum/max*100).toFixed(1)}%"></div></td>
+    <td><b>${r.p.id}.</b> ${r.p.name} <span class="rbs">${rb(r.p)}</span> ${cancTag(r.p)}${links(r.p)}<div class="bar ${r.p.k}" style="width:${(r.sum/max*100).toFixed(1)}%"></div></td>
     <td class="r mono">R$ ${r.d.toLocaleString("pt-BR")}</td>
     <td class="r mono">${r.t?"+ R$ "+r.t.toLocaleString("pt-BR"):"R$ 0"}</td>
     <td class="r mono"><b>R$ ${r.sum.toLocaleString("pt-BR")}</b></td>
@@ -527,10 +546,11 @@ function picks(){
     return `<article class="pick ${k.cls}">
       <span class="k">${k.k}</span>
       <h3>${p.name}</h3>
-      <span class="rbs">${rb(p)}</span>
+      <span class="rbs">${rb(p)}</span> ${cancTag(p)}
       <div class="money"><div><span class="lbl">Por pessoa</span><span class="big mono">${R(pp(p))}</span></div>
         <div><span class="lbl">Total para 4</span><span class="mid mono">${R(p.brlTotal+p.trBrl)}</span><small>${fmtOrig(p)}${p.trBrl?" + transporte":""}</small></div></div>
       <p>${k.why}</p>
+      <p class="cline"><b>Cancelamento:</b> ${p.canc}</p>
       ${a?`<p class="altp">${k.altTxt}: <b>${a.name}</b>, ${R(pp(a))} por pessoa.</p>`:""}
       <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="#lista" data-go="${p.id}">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">${a.name.split(",")[0]} no ${siteName(a)}</a>`:""}</div>
     </article>`}).join("");
