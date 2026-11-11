@@ -227,6 +227,20 @@ td.r,th.r{white-space:nowrap}
 .cline{font-size:.86rem;margin-top:-4px}
 .card .price .ctag{justify-self:end}
 @media (max-width:560px){.card .price .ctag{justify-self:start}}
+
+.rank{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+.rank h2{margin:0}
+.ranklist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rk{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.rk:first-child{border-top:0}
+.rkn{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font:700 1rem var(--f-mono)}
+.rk:first-child .rkn{background:var(--fav)}
+.rkb p{margin:4px 0 6px;font-size:.92rem}
+.rkh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.rkp{display:grid;justify-items:end;text-align:right}
+.rkp .big{font-size:1.35rem;font-weight:700}
+.rkp small{color:var(--muted);font-size:.78rem}
+@media (max-width:560px){.rk{grid-template-columns:34px minmax(0,1fr)}.rkp{grid-column:2;justify-items:start;text-align:left}}
 </style>
 
 <div class="wrap">
@@ -241,9 +255,17 @@ td.r,th.r{white-space:nowrap}
       <span class="fact"><b>Câmbio</b> · A$ 1 = R$ 3,81 · € 1 = R$ 6,18</span>
     </div>
     <nav class="toc" aria-label="Nesta página">
-      <a href="#resumo">Resumo</a><a href="#lista">Mapa e lista</a><a href="#custos">Custo por pessoa</a><a href="#booking">Booking</a><a href="#status">Sites pesquisados</a><a href="2-pessoas.html">Pesquisa para 2 pessoas →</a>
+      <a href="#ranking">Meu ranking</a><a href="#resumo">Resumo</a><a href="#lista">Mapa e lista</a><a href="#custos">Custo por pessoa</a><a href="#booking">Booking</a><a href="#status">Sites pesquisados</a><a href="2-pessoas.html">Pesquisa para 2 pessoas →</a>
     </nav>
   </header>
+
+  <section class="rank" id="ranking" aria-label="Meu ranking">
+    <span class="eyebrow">Meu ranking · casal + 2 solteiros · 10/11/2026</span>
+    <h2>Minha ordem de preferência</h2>
+    <ol class="ranklist" id="ranklist"></ol>
+    <p class="note">Por pessoa inclui o transporte quando não dá para ir a pé. Critérios, nesta ordem: cama de casal para o casal e 3+ camas, 2 banheiros, preço, nota, cancelamento e distância do ICC.</p>
+  </section>
+
 
   <section class="section-h" id="resumo" aria-label="Resumo">
     <span class="eyebrow">Resumo · 4 pessoas</span>
@@ -538,6 +560,27 @@ const PICKS=[
  {id:33,cls:"p3",k:"Apartamento mais barato",why:"2 quartos, cada um com 1 queen e 1 de solteiro. 2 banheiros. Metrô e light rail até o ICC (35 min). O anúncio não tem avaliações: o risco é maior."},
  {id:42,cls:"p4",k:"Mais barato de todos",why:"Vocês reservam as 4 camas de um dormitório de hostel (beliches). O banheiro é do andar e o hostel limpa todo dia. O ICC fica a 17 min a pé. Nota 8.8 com 2.365 avaliações. O casal fica em beliche.",alt:44,altTxt:"Mais perto do ICC (12 min a pé)"}
 ];
+
+/* meu ranking */
+const RANK=[
+ {id:15,why:"Melhor custo-benefício. Quarto com queen para o casal, quarto com 2 de solteiro para os outros, 2 banheiros e nota 9.0. Trem até o ICC em 25–30 min. Ponto fraco: o preço com cupom é não reembolsável. Com reembolso até 26/11, sem cupom, custa R$ 22.569."},
+ {id:34,why:"A pé do ICC (30–35 min), 3 quartos com queen e 2 banheiros: cada um dorme num quarto. Nota 4.87, mas só 15 avaliações. O mesmo imóvel parece estar no Booking por R$ 22.343, com cancelamento grátis até 19/11.",alt:54},
+ {id:33,why:"O apartamento mais barato que serve: 2 quartos com queen + solteiro e 2 banheiros. Fica longe (metrô + light rail, 35 min) e não tem avaliações, então o risco é maior."},
+ {id:44,why:"Se o objetivo for gastar pouco: as 4 camas de um dormitório, reservadas no site do hostel, a 12 min a pé. O banheiro é do hostel e limpo todo dia. O casal fica em beliche."},
+ {id:42,why:"Alternativa ao Maze, com nota melhor (8.8 com 2.365 avaliações) e 17 min a pé. Mesmo esquema de dormitório."}
+];
+function ranking(){
+  document.getElementById("ranklist").innerHTML=RANK.map((r,i)=>{const p=P.find(x=>x.id===r.id);const a=r.alt&&P.find(x=>x.id===r.alt);
+    return `<li class="rk">
+      <span class="rkn">${i+1}</span>
+      <div class="rkb">
+        <div class="rkh"><b>${p.name}</b> <span class="rbs">${rb(p)}</span> ${cancTag(p)}</div>
+        <p>${r.why}</p>
+        <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="#lista" data-go="${p.id}">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">Ver no ${siteName(a)}</a>`:""}</div>
+      </div>
+      <div class="rkp"><span class="big mono">${R(pp(p))}</span><small>por pessoa</small><small class="mono">${R(p.brlTotal+p.trBrl)} no total</small></div>
+    </li>`}).join("");
+}
 function picks(){
   document.getElementById("verdict4").innerHTML=PICKS.map(k=>{const p=P.find(x=>x.id===k.id);const a=k.alt&&P.find(x=>x.id===k.alt);
     return `<article class="pick ${k.cls}">
@@ -561,6 +604,7 @@ render();fitVisible();
 /* o viewer ajusta o tamanho do quadro depois do carregamento: reenquadra quando ele estabiliza */
 setTimeout(()=>{lmap.invalidateSize();fitVisible()},400);
 costTable4();
+ranking();
 picks();
 document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{state.f=b.dataset.f;render();fitVisible()}));
 document.getElementById("sort").addEventListener("change",e=>{state.sort=e.target.value;render()});
