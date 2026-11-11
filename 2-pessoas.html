@@ -2,6 +2,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="base.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -164,67 +168,141 @@ details.ref[open]>summary::after{content:"Esconder ▴"}
 .refbody{display:grid;gap:24px;padding:0 18px 18px}
 html{scroll-behavior:smooth} @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 section[id],div[id]{scroll-margin-top:16px}
-.refbody2{display:grid;gap:36px}
 td.r,th.r{white-space:nowrap}
 .tag{white-space:nowrap}
 #custos{grid-template-columns:minmax(0,.75fr) minmax(0,2fr)}
 @media (max-width:900px){#custos{grid-template-columns:1fr}}
+
+/* mapa real fixo ao lado da lista */
+.explore{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.mapbox{position:sticky;top:12px;align-self:start;padding:10px}
+#lmap{height:calc(100vh - 110px);min-height:420px;border-radius:8px;border:1px solid var(--line);z-index:0;background:var(--land)}
+@media (max-width:900px){
+  .explore{grid-template-columns:1fr}
+  .mapbox{position:sticky;top:0;z-index:5;border-radius:0 0 12px 12px;margin-inline:-16px;box-shadow:0 6px 14px rgba(0,0,0,.12)}
+  #lmap{height:42vh;min-height:260px}
+  .mapbox .legend{display:none}
+}
+.ringdot{background:transparent!important;border:2.5px solid var(--own)}
+#lmap .vb-water{fill:color-mix(in srgb,var(--water) 75%,var(--accent));fill-opacity:1;stroke:none}
+#lmap .vb-park{fill:var(--park);fill-opacity:1;stroke:none}
+#lmap .vb-road{stroke:var(--road);fill:none}
+#lmap .vb-road.major{stroke:var(--road-major)}
+#lmap .vb-rail{stroke:var(--rail);fill:none}
+#lmap .vb-lrail{stroke:var(--fav);stroke-opacity:.8;fill:none}
+.mini{font:600 .78rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 10px;cursor:pointer;margin-left:auto}
+.lmk{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font:700 .74rem var(--f-mono);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:transform .12s}
+.lmk.walk{background:var(--walk)} .lmk.ride{background:var(--ride)}
+.lmk.ok{box-shadow:0 0 0 3px var(--own),0 1px 4px rgba(0,0,0,.35)}
+.lmk.hot,.lmk.sel{transform:scale(1.35);z-index:1000}
+.lmk.sel{background:var(--fav)}
+.iccmk{display:grid!important;place-items:center;border-radius:50%;background:var(--accent);color:#fff;font:700 .72rem var(--f-mono);border:3px solid #fff;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 25%,transparent)}
+.ringlab{color:var(--ring);font:600 .7rem var(--f-mono);text-align:center;white-space:nowrap;text-shadow:0 0 3px #fff}
+.num.ok{box-shadow:0 0 0 2.5px var(--own)}
+@media (prefers-color-scheme: dark){.leaflet-tile-pane{filter:brightness(.78) contrast(1.05) saturate(.85)}}
+.leaflet-tooltip{font:400 .8rem/1.35 var(--f-body)}
+.card.on{background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+@media (prefers-reduced-motion:reduce){.lmk{transition:none}}
+@media (max-width:560px){
+  .card{grid-template-columns:30px minmax(0,1fr)}
+  .card .price{grid-column:2;text-align:left;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 8px}
+  .card .price .n,.card .price .r{grid-column:auto}
+  .card .links{grid-column:2}
+  .money{grid-template-columns:1fr 1fr}
+}
+
+.rb{display:flex;flex-wrap:wrap;gap:4px 14px;font:600 .9rem var(--f-body);color:var(--fg)}
+.rbs{font-size:.82rem;color:var(--muted);font-weight:600}
+.facts2{display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;margin:6px 0 2px;font-size:.86rem}
+.facts2 dt{font:600 .7rem/1.6 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.facts2 dd{margin:0;color:var(--fg)}
+@media (max-width:560px){.facts2{grid-template-columns:1fr}.facts2 dt{margin-top:4px}}
+.ctag{display:inline-block;font:700 .72rem/1.2 var(--f-body);padding:3px 8px;border-radius:999px;white-space:nowrap;margin:2px 0}
+.cyes{background:#dff3e4;color:#17643a;border:1px solid #9fd5b0}
+.cpart{background:#fff1d6;color:#7a5200;border:1px solid #f0cf86}
+.cno{background:#fde2e1;color:#9b1c1c;border:1px solid #f3a9a6}
+.cunk{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+@media (prefers-color-scheme:dark){.cyes{background:#123d25;color:#9fe2b6;border-color:#24603d}.cpart{background:#3d2e0d;color:#f5d38a;border-color:#6b5218}.cno{background:#451616;color:#f7b4b0;border-color:#7a2a2a}}
+.facts2 .cdt{color:var(--fg)} .facts2 .cdd{font-weight:600}
+.cline{font-size:.86rem;margin-top:-4px}
+.card .price .ctag{justify-self:end}
+@media (max-width:560px){.card .price .ctag{justify-self:start}}
+
+.rank{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:grid;gap:10px}
+.rank h2{margin:0}
+.ranklist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rk{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.rk:first-child{border-top:0}
+.rkn{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font:700 1rem var(--f-mono)}
+.rk:first-child .rkn{background:var(--fav)}
+.rkb p{margin:4px 0 6px;font-size:.92rem}
+.rkh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.rkp{display:grid;justify-items:end;text-align:right}
+.rkp .big{font-size:1.35rem;font-weight:700}
+.rkp small{color:var(--muted);font-size:.78rem}
+@media (max-width:560px){.rk{grid-template-columns:34px minmax(0,1fr)}.rkp{grid-column:2;justify-items:start;text-align:left}}
 </style>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">NeurIPS 2026 · ICC Sydney · pesquisa de 04/11/2026 · 2 pessoas</span>
-    <h1>Onde ficar em Sydney de 3 a 16 de dezembro, para 2 pessoas</h1>
-    <p class="lede">Hospedagens para duas pessoas em quartos com mais de uma cama, perto o bastante do ICC Sydney para ir todo dia de 6 a 12/dez. Valores totais das 13 noites com taxas, em reais, com o valor original ao lado. Esta é a pesquisa de referência; a atual, para 4 pessoas, está em <a href="index.html">hospedagem-sydney.html</a>.</p>
+    <span class="eyebrow">NeurIPS 2026 · ICC Sydney · 2 pessoas · atualizado em 11/11/2026</span>
+    <h1>Onde ficar em Sydney de 3 a 16 de dezembro</h1>
+    <p class="lede">Hospedagem para <b>2 pessoas</b>. Requisito: <b>mais de uma cama</b> (2 camas separadas ou 2 de casal; sofá-cama sozinho não conta). Banheiro privativo é melhor, mas banheiro de hostel serve. Os valores são o total das 13 noites com taxas, em reais, com o valor original ao lado; "por pessoa" inclui o transporte quando o lugar não fica a pé do ICC. Cada opção mostra a política de cancelamento: <span class="ctag cyes">grátis</span> <span class="ctag cpart">com condições</span> <span class="ctag cno">não reembolsável</span> <span class="ctag cunk">a confirmar</span>. Preços mudam rápido: confira antes de reservar.</p>
     <div class="facts">
       <span class="fact"><b>13 noites</b> · 3 → 16/dez</span>
-      <span class="fact"><b>2 pessoas</b> · mais de uma cama</span>
+      <span class="fact"><b>2 pessoas</b> · 2+ camas</span>
       <span class="fact"><b>Conferência</b> · 6 → 12/dez</span>
-      <span class="fact"><b>Câmbio</b> · A$ 1 = R$ 3,81 · € 1 = R$ 6,18</span>
+      <span class="fact"><b>Câmbio</b> · A$ 1 = R$ 3,83 · € 1 = R$ 6,23</span>
+      <span class="fact"><b>Cupom HOTEISMD10OFF</b> · só até 11/11</span>
     </div>
+    <nav class="toc" aria-label="Nesta página">
+      <a href="#ranking">Meu ranking</a><a href="#resumo">Resumo</a><a href="#lista">Mapa e lista</a><a href="#custos">Custo por pessoa</a><a href="#booking">Booking</a><a href="#cupons">Cupons e Decolar</a><a href="#status">Sites pesquisados</a><a href="index.html">Pesquisa para 4 pessoas →</a>
+    </nav>
   </header>
 
-  
-  
+  <section class="rank" id="ranking" aria-label="Meu ranking">
+    <span class="eyebrow">Meu ranking · 2 pessoas · 11/11/2026</span>
+    <h2>Minha ordem de preferência</h2>
+    <ol class="ranklist" id="ranklist"></ol>
+    <p class="note">Por pessoa inclui o transporte quando não dá para ir a pé. Critérios, nesta ordem: 2 camas, preço por pessoa, nota e número de avaliações, cancelamento e distância do ICC. O que pode mudar a ordem: o cupom HOTEISMD10OFF (só até hoje, 11/11) e a confirmação da data de cancelamento do Scape Redfern.</p>
+  </section>
 
-  
+  <section class="section-h" id="resumo" aria-label="Resumo">
+    <span class="eyebrow">Resumo · 2 pessoas</span>
+    <h2>O que eu escolheria</h2>
+    <p class="note">Só entram lugares com 2 camas ou mais. Por pessoa já inclui o transporte (≈ R$ 182 por pessoa) quando o lugar não fica a pé do ICC. Os dois favoritos antigos (Pied à Terre e Lilyfield Nest, no Airbnb) <b>ficaram indisponíveis</b> para 3 a 16/dez e têm 1 cama de casal + sofá-cama ou cama dobrável: saíram da lista.</p>
+  </section>
+  <section class="verdict" id="verdict4" aria-label="Destaques para 2 pessoas"></section>
+
+  <div class="answer">
+    <h3>Ficar num lugar só ou dividir?</h3>
+    <p><b>Num lugar só.</b> A diária não muda por dividir a estadia (no Maze, 3–6/dez somado a 6–12/dez dá o mesmo preço de 3–12/dez direto), e a oferta perto do ICC some na semana da conferência. Uma só reserva evita trocar de lugar com mala no meio da NeurIPS.</p>
+  </div>
 
   <section class="explore" aria-label="Mapa e opções" id="lista">
     <div class="mapbox" id="mapbox">
-      <div class="mapframe">
-        <svg id="map" viewBox="0 0 540 500" role="img" aria-label="Mapa esquemático do centro-oeste de Sydney com o ICC, bairros, ruas, trem, light rail e as hospedagens"></svg>
-        <div class="mapctl" aria-label="Zoom do mapa">
-          <button id="z-in" type="button" aria-label="Aproximar">+</button>
-          <button id="z-out" type="button" aria-label="Afastar">−</button>
-          <button id="z-reset" type="button" aria-label="Ver tudo">⌂</button>
-        </div>
-        <div class="scale" id="scale"><span>500 m</span><i></i></div>
-        <div class="tip" id="tip" hidden></div>
-      </div>
+      <div id="lmap" role="region" aria-label="Mapa de Sydney com o ICC e as hospedagens"></div>
       <div class="legend">
-        <span><i class="dot" style="background:var(--walk)"></i>A pé</span>
+        <span><i class="dot" style="background:var(--walk)"></i>A pé do ICC</span>
         <span><i class="dot" style="background:var(--ride)"></i>Com transporte</span>
-        <span><i class="dot" style="background:var(--bad)"></i>Esgotado</span>
-        <span><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--own)" stroke-width="2.5"/></svg>Cama para cada um</span>
-        <span><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="var(--fav)" stroke-width="3"/></svg>Light rail L1</span>
-        <span><svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="var(--rail)" stroke-width="2" stroke-dasharray="5 3"/></svg>Trem</span>
+        <span><i class="dot ringdot"></i>Tem 2 camas ou mais</span>
         <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="var(--ring)" stroke-dasharray="2 2"/></svg>15 e 30 min a pé do ICC</span>
-        <span><i class="dot" style="background:var(--park);border:1px solid var(--road-major);border-radius:3px"></i>Parque / campus</span>
+        <button id="z-all" type="button" class="mini">Enquadrar opções</button>
       </div>
-      <p class="maphint">Mapa esquemático: a costa, as ruas e as linhas são simplificadas e as posições são aproximadas por endereço. Use + e − para aproximar e arraste para mover. Toque num número para ver a opção; o link “Ver no mapa” de cada card abre o local no Google Maps. </p>
     </div>
 
-    <div>
+    <div class="listcol">
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filtrar opções">
-          <button data-f="all" aria-pressed="true">Todas</button>
-          <button data-f="walk" aria-pressed="false">A pé</button>
-          <button data-f="ride" aria-pressed="false">Com transporte</button>
-          <button data-f="fav" aria-pressed="false">Favoritos</button>
+          <button data-f="ok" aria-pressed="true">Têm 2 camas</button>
+          <button data-f="walk" aria-pressed="false">Têm 2 camas, a pé</button>
+          <button data-f="ride" aria-pressed="false">Têm 2 camas, com transporte</button>
+          <button data-f="free" aria-pressed="false">Têm 2 camas, cancelamento grátis</button>
+          <button data-f="all" aria-pressed="false">Todas</button>
         </div>
         <label class="sort">Ordenar por
           <select id="sort">
-            <option value="price">menor preço</option>
+            <option value="price">menor preço por pessoa</option>
             <option value="dist">mais perto do ICC</option>
             <option value="rate">melhor nota</option>
           </select>
@@ -235,428 +313,299 @@ td.r,th.r{white-space:nowrap}
     </div>
   </section>
 
-  
-
-  
-
-  
-
-  <div class="refbody2">
-      <section class="verdict" aria-label="Recomendações">
-    <article data-id="8" class="pick p1">
-      <span class="k">Apartamento mais barato</span>
-      <h3>Lilyfield Nest</h3>
-      <div class="big mono">R$ 8.951 <small>A$ 2.352 + ~R$ 381 de transporte</small></div>
-      <p>Apartamento inteiro com 2 camas. O light rail L1 sai de Lilyfield e para na estação Convention, ao lado do ICC.</p>
-    </article>
-    <article data-id="9" class="pick p2">
-      <span class="k">Seu favorito</span>
-      <h3>Pied à Terre, Camperdown</h3>
-      <div class="big mono">R$ 11.554 <small>A$ 3.036 + ~R$ 381 de transporte</small></div>
-      <p>Condo inteiro com 2 camas e nota 4.96 (49 avaliações). Ônibus de 15–20 min ou ~40 min a pé. Disponível.</p>
-    </article>
-    <article class="pick p3">
-      <span class="k">Mais barato de todos</span>
-      <h3>Stay Today ou Maze</h3>
-      <div class="big mono">R$ ~6.200 <small>A$ ~1.630, sem transporte</small></div>
-      <p>Quarto twin só de vocês em hostel, com banheiro compartilhado. Dá para ir ao ICC a pé.</p>
-    </article>
-    <article data-id="14" class="pick p4">
-      <span class="k">Novidade a conferir</span>
-      <h3>Scape Redfern</h3>
-      <div class="big mono">R$ ~5.800 <small>€ ~940 ≈ € 72/noite</small></div>
-      <p>Apartamento com 2 camas e banheiro próprio, a ~25 min a pé. Sem avaliações no Hostelworld e preço fora da curva: confirme o quarto antes de contar com ele.</p>
-    </article>
-  </section>
-      <div class="answer">
-    <h3>Vale ficar no mesmo lugar o período todo?</h3>
-    <p>Sim. Dividir a estadia não muda a diária: no Maze, 3–6/dez (A$ 379) mais 6–12/dez (A$ 758) dá A$ 1.137, o mesmo que reservar 3–12 direto. Ficando num lugar só, vocês não trocam de hospedagem com mala no meio da conferência nem arriscam ficar sem vaga, porque a oferta perto do ICC some na semana da NeurIPS.</p>
-  </div>
-      <section class="costs" aria-label="Custos">
+  <section class="costs" aria-label="Custo para 2 pessoas" id="custos">
     <div class="panel">
-      <h2>Quanto custa o transporte</h2>
+      <h2>Transporte para 2</h2>
       <ul>
-        <li>De 6 a 12/dez são <b>7 dias</b> de ida e volta para <b>2 pessoas</b>.</li>
-        <li>No Opal, trem e ônibus custam A$ ~3–4,20 por trecho no pico. O teto diário é de A$ ~19 (seg–qui) e A$ ~9,65 (sex–dom), e o teto semanal é de <b>A$ 50 por pessoa</b>.</li>
-        <li>Na semana da conferência, isso dá A$ ~45–50 por pessoa, ou <b>~A$ 100 para os dois</b>. Usando transporte também nos outros dias, some mais A$ 50–100.</li>
+        <li>Opal 2026: trem ou metrô até 10 km custa <b>A$ 4,33 no pico</b> (seg–qui, 6h30–10h e 15h–19h) e A$ 3,03 fora dele.</li>
+        <li>Teto diário de A$ 19,30 (seg–qui) e A$ 9,65 (sex–dom), e <b>teto semanal de A$ 50 por pessoa</b>.</li>
+        <li>Ida e volta de 6 a 12/dez dá ~A$ 47 por pessoa. Para 2 pessoas, <b>~A$ 95 (≈ R$ 364)</b>.</li>
       </ul>
-      <p class="rule">Um lugar com transporte só compensa se for A$ ~150 mais barato que uma opção equivalente a pé.</p>
-      <p class="note">Até ~30 min a pé (Haymarket, Ultimo, Pyrmont, Chippendale, Redfern, Surry Hills, Glebe), o transporte é grátis. As tarifas de 2026 variam entre as fontes; confira no <a href="https://transportnsw.info/tickets-fares/fares/adult-opal-fares">site do Transport for NSW</a>.</p>
+      <p class="rule">Para 2 pessoas, um lugar com transporte só compensa se sair ~R$ 575 (A$ 150) mais barato que um equivalente a pé do ICC.</p>
+      <p class="note">Fontes: <a href="https://www.transport.nsw.gov.au/system/files/media/documents/2026/public-transport-fares-and-ticketing-brochure.pdf">folheto de tarifas TfNSW 2026</a> e regras de pico (TfNSW Open Data). Confira no app Opal.</p>
     </div>
     <div class="panel">
-      <h2>Custo real em 13 noites</h2>
-      <div class="tablewrap"><table id="costtable">
-        <thead><tr><th>Lugar</th><th class="r">Diárias</th><th class="r">Transporte</th><th class="r">Total</th></tr></thead>
+      <h2>Custo real para 2, em 13 noites</h2>
+      <div class="tablewrap"><table id="costtable4">
+        <thead><tr><th>Lugar</th><th class="r">Diárias</th><th class="r">Transporte</th><th class="r">Total</th><th class="r">Por pessoa</th></tr></thead>
         <tbody></tbody>
       </table></div>
-      <p class="note">Valores em <b>R$</b> (A$ 1 = R$ 3,81 e € 1 = R$ 6,18, câmbio comercial de 10/11/2026). Total = diárias + transporte estimado (A$ 100 ≈ R$ 381 para quem não fica a pé). Ordenado pelo total. A fatura do cartão terá IOF e spread.</p>
+      <p class="note">Só lugares com 2 camas ou mais. Valores em <b>R$</b> (A$ 1 = R$ 3,83 e € 1 = R$ 6,23, câmbio comercial de 11/11/2026; a fatura do cartão terá IOF e spread, menos nos preços já em reais). Total = diárias + transporte estimado (A$ 95 ≈ R$ 364 para os 2, quando não dá para ir a pé). Ordenado pelo total.</p>
     </div>
   </section>
-      <section class="costs" aria-label="Complemento Hostelworld e Google Hotels">
-    <div class="panel">
-      <span class="eyebrow">Complemento · Hostelworld · 3 → 16/dez</span>
-      <h2>Quartos privativos para 2</h2>
-      <p class="note">Preço médio por noite em <b>euro</b>, como o Hostelworld devolveu. Distância em linha reta até o ICC.</p>
+
+  <section class="costs" aria-label="Booking" id="booking">
+    <div class="panel" style="grid-column:1/-1">
+      <span class="eyebrow">Booking.com · 2 adultos · coleta de 11/11/2026 no seu Chrome</span>
+      <h2>O que o Booking mostrou</h2>
+      <p class="note">Busca feita no seu Chrome com o Claude in Chrome, sem login (sem Genius). Preços em <b>A$</b>, total das 13 noites com impostos. A busca ficou incompleta: li 12 páginas de hotel, não os 25 mais baratos. As distâncias do Booking são até o centro, não até o ICC.</p>
       <div class="tablewrap"><table>
-        <thead><tr><th>Lugar</th><th>Quarto</th><th class="r">€/noite</th><th class="r">~13 noites</th><th class="r">Nota</th><th class="r">ICC</th></tr></thead>
+        <thead><tr><th>Lugar</th><th>Unidade e camas</th><th class="r">Total</th><th>Cancelamento</th><th class="r">Nota</th><th>2 camas?</th></tr></thead>
         <tbody>
-          <tr><td><b>Scape Redfern</b> <span class="tag fav">conferir</span></td><td>Apartamento, 2 camas, banheiro próprio</td><td class="r mono">€ 72</td><td class="r mono">€ ~940</td><td class="r mono">—</td><td class="r mono">1,8 km</td></tr>
-          <tr><td>Maze Backpackers</td><td>Twin, banheiro compartilhado</td><td class="r mono">€ 94</td><td class="r mono">€ ~1.220</td><td class="r mono">8.5</td><td class="r mono">0,9 km</td></tr>
-          <tr><td>790 on George</td><td>Twin, banheiro compartilhado</td><td class="r mono">€ 106</td><td class="r mono">€ ~1.370</td><td class="r mono">7.9</td><td class="r mono">0,9 km</td></tr>
-          <tr><td>Mad Monkey on Broadway</td><td>Duplo (1 cama), banheiro compartilhado</td><td class="r mono">€ 107</td><td class="r mono">€ ~1.390</td><td class="r mono">8.7</td><td class="r mono">1,2 km</td></tr>
-          <tr><td>Big Hostel</td><td>Duplo (1 cama), banheiro próprio</td><td class="r mono">€ 202</td><td class="r mono">€ ~2.620</td><td class="r mono">8.9</td><td class="r mono">1,1 km</td></tr>
-          <tr><td>Sydney Central Inn</td><td>Duplo, banheiro compartilhado</td><td class="r mono">€ 218</td><td class="r mono">€ ~2.840</td><td class="r mono">10</td><td class="r mono">0,9 km</td></tr>
-          <tr><td>YHA Sydney Harbour</td><td>Duplo (1 cama), banheiro próprio</td><td class="r mono">€ 300</td><td class="r mono">€ ~3.900</td><td class="r mono">9.6</td><td class="r mono">1,8 km</td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/cityview-studio-accommodation-sydney.en-gb.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=2&amp;no_rooms=1&amp;group_children=0" target="_blank" rel="noopener">Cityview Studio</a> (Leichhardt)</td><td>Standard Double: 1 casal. Deluxe Queen: 1 casal.</td><td class="r mono">A$ 2.151 (R$ 8.272)</td><td><span class="ctag cno">Não reembolsável</span></td><td class="r mono">7,0 (407)</td><td>Não. 4,1 km de Darling Harbour.</td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/accommodation-sydney-hyde-park-plaza.en-gb.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=2&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=AUD" target="_blank" rel="noopener">Accommodation Sydney Hyde Park Plaza</a></td><td>Apto 1 quarto, 45 m²: 2 solteiro + 1 casal, sofá-cama na sala</td><td class="r mono">A$ 4.129 (era 6.998)</td><td><span class="ctag cno">Não reembolsável</span></td><td class="r mono">7,3 (962)</td><td>Sim. Promoção 11.11. No Hoteis.com: R$ 13.184 com cupom.</td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/57hotel.en-gb.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=2&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=AUD" target="_blank" rel="noopener">57Hotel</a></td><td>Twin: 1 solteiro + 1 casal extragrande, 25 m²</td><td class="r mono">A$ 6.549 (público 7.277)</td><td><span class="ctag cyes">Grátis até 02/12</span></td><td class="r mono">8,4 (3.247)</td><td>Sim. Preço de membro logado. Pague só em 30/11.</td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/vibe-sydney.en-gb.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=2&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=AUD" target="_blank" rel="noopener">Vibe Hotel Sydney</a></td><td>Guest King ou Twin: 2 solteiras ou 1 extragrande, 38 m²</td><td class="r mono">A$ 6.694 (membro 6.025)</td><td><span class="ctag cyes">Grátis até 26/11</span></td><td class="r mono">8,3 (4.271)</td><td>Sim. Café custa A$ 29 por pessoa por dia.</td></tr>
+          <tr><td>Hotel Diplomat Sydney</td><td>Superior King, 19 m²: 1 cama</td><td class="r mono">A$ 5.097 (membro 4.588)</td><td><span class="ctag cyes">Grátis até 02/12</span></td><td class="r mono">7,7 (851)</td><td>Não: só 1 cama.</td></tr>
+          <tr><td>Veriu Sydney Central</td><td>Micro Queen: 1 cama</td><td class="r mono">A$ 4.967</td><td><span class="ctag cyes">Grátis até 26/11</span></td><td class="r mono">7,5 (2.071)</td><td>Não: só 1 cama.</td></tr>
+          <tr><td>ibis Styles Sydney Central</td><td>Deluxe Queen: 1 cama</td><td class="r mono">A$ 5.290 (flexível 6.223)</td><td><span class="ctag cpart">Flexível até 02/12</span></td><td class="r mono">7,9 (3.977)</td><td>Não: só 1 cama.</td></tr>
+          <tr><td>Great Southern Hotel</td><td>Queen: 1 cama</td><td class="r mono">A$ 5.718</td><td><span class="ctag cno">Não reembolsável</span></td><td class="r mono">8,2 (11.040)</td><td>Não: só 1 cama (Twin esgotado).</td></tr>
+          <tr><td>Charming Chippendale Escape</td><td>Apto 1 quarto: 1 casal + sofá-cama</td><td class="r mono">A$ 3.359 (+ 261 de taxas)</td><td><span class="ctag cno">Não reembolsável</span></td><td class="r mono">7,4 (6)</td><td>Não: só 1 cama.</td></tr>
+          <tr><td>The Crown, Two Surry Hills</td><td>Apto com 1 sofá-cama</td><td class="r mono">A$ 2.773</td><td><span class="ctag cpart">Parcial</span></td><td class="r mono">8,5 (200)</td><td>Não.</td></tr>
+          <tr><td>Chic Surry Hills Style</td><td>Apto de 2 quartos (camas não lidas)</td><td class="r mono">A$ 4.076</td><td><span class="ctag cunk">a confirmar</span></td><td class="r mono">8,0 (4)</td><td>Não confirmado. Só 4 avaliações.</td></tr>
+          <tr><td>Top Floor 1 Bedroom Apt</td><td>1 cama de casal grande</td><td class="r mono">A$ 3.156</td><td><span class="ctag cyes">Grátis (data não lida)</span></td><td class="r mono">7,2 (8)</td><td>Não.</td></tr>
         </tbody>
       </table></div>
-      <p class="note">O Scape Redfern é o único privativo com 2 camas e banheiro próprio abaixo de € 100/noite, mas não tem avaliações e o preço destoa do resto. O Maze e o 790 saem mais baratos no Booking (A$ 126 e 184/noite).</p>
-      <h3>1 pessoa, cama em dormitório</h3>
+      <p class="rule">Conclusão: no Booking, os únicos com 2 camas e preço razoável são o Hyde Park Plaza (não reembolsável), o 57Hotel e o Vibe (cancelamento grátis). Quase todos os hotéis baratos têm só 1 cama de casal. Não abri 25hours, Challis Potts Point, Adge e Adina (A$ 5.812 a 6.617).</p>
+    </div>
+  </section>
+
+  <section class="costs" aria-label="Cupons e Decolar" id="cupons">
+    <div class="panel">
+      <span class="eyebrow">Hoteis.com · coleta de 11/11/2026</span>
+      <h2>Cupom HOTEISMD10OFF: testado, vale só hoje</h2>
       <ul>
-        <li>Mad Monkey on Broadway, <b>€ 28</b>/noite (nota 8.7, 1,2 km)</li>
-        <li>Maze Backpackers, <b>€ 33</b> (0,9 km)</li>
-        <li>790 on George, <b>€ 34</b> (0,9 km)</li>
-        <li>Nomads Sydney, <b>€ 41</b> (0,6 km, o mais perto)</li>
-        <li>Wake Up! Sydney Central, <b>€ 44</b> (nota 9.1, 11 mil avaliações)</li>
+        <li>Entrando por <b>promo.melhoresdestinos.com.br/hoteiscom</b>, o cupom foi <b>aceito no checkout</b>: 10% de desconto (zera a linha de impostos). Testes: Hyde Park (R$ 14.503 → R$ 13.184), 57 Hotel (R$ 22.341 → R$ 20.310) e Vibe (R$ 23.120 → R$ 21.018).</li>
+        <li>Só vale em "pagar agora" (12x sem juros) e <b>até 11/11/2026</b>. Um cupom por reserva. Não ative extensões de cashback (Cuponomia).</li>
+        <li>O 57 Hotel mostrou "não é possível usar cupons" nas tarifas não reembolsáveis; no Hyde Park (não reembolsável) funcionou.</li>
+        <li>Quartos de 2 camas esgotados no Hoteis.com: Great Southern (Twin), 57 Hotel (2 queen e twin) e Meriton Kent Street e Veriu (só 1 cama).</li>
       </ul>
     </div>
     <div class="panel">
-      <span class="eyebrow">Complemento · Google Hotels · 3 → 16/dez</span>
-      <h2>Hotéis em Haymarket e Ultimo</h2>
-      <p class="note">Menor preço anunciado por noite, em <b>reais</b>.</p>
-      <div class="tablewrap"><table>
-        <thead><tr><th>Hotel</th><th class="r">R$/noite</th><th class="r">Nota Google</th></tr></thead>
-        <tbody>
-          <tr><td>The Great Southern Hotel</td><td class="r mono">R$ 1.141</td><td class="r mono">4.0 (2,5 mil)</td></tr>
-          <tr><td>Furama Darling Harbour</td><td class="r mono">R$ 1.510</td><td class="r mono">4.0 (2,4 mil)</td></tr>
-          <tr><td>Song Hotel Sydney</td><td class="r mono">R$ 1.570</td><td class="r mono">4.3 (4 mil)</td></tr>
-          <tr><td>ibis Styles Sydney Central</td><td class="r mono">R$ 1.580</td><td class="r mono">4.0 (1,8 mil)</td></tr>
-          <tr><td>Meriton Suites Kent Street</td><td class="r mono">R$ 1.611</td><td class="r mono">4.2 (2,9 mil)</td></tr>
-          <tr><td>Apartment Hotel Botanik</td><td class="r mono">R$ 1.689</td><td class="r mono">4.4 (51)</td></tr>
-          <tr><td>Novotel Sydney on Darling Harbour</td><td class="r mono">R$ 1.902</td><td class="r mono">4.2 (5,7 mil)</td></tr>
-        </tbody>
-      </table></div>
-      <p class="note">Hostels aparecem no Google a partir de R$ ~300/noite, mas esse é o preço de uma cama em dormitório.</p>
-      <p class="rule">Não muda o veredito: Stay Today e Maze continuam os mais baratos com 2 camas, e Lilyfield Nest e Pied à Terre os melhores apartamentos. A única novidade a checar é o Scape Redfern.</p>
+      <span class="eyebrow">Decolar · R$ · coleta de 11/11/2026</span>
+      <h2>Cupom DIARIAS11: não achei</h2>
+      <ul>
+        <li>A página oficial de cupons da Decolar lista só <b>350HOTEL</b> (até 4%, teto R$ 350, 1ª compra de hotel, 09 a 30/09) e <b>500PACOTE</b>. Não achei <b>DIARIAS11</b> em nenhum site de cupom.</li>
+        <li>Hoje a Decolar faz a <b>Black Decolar 11/11</b>: diárias a partir de R$ 11 em hospedagens selecionadas, até 40% de desconto em hotéis e 12x sem juros. O nome DIARIAS11 pode vir dessa campanha.</li>
+        <li>No checkout, o campo de cupom pede <b>o seu e-mail</b>, então não testei. Se quiser, digite o e-mail e o código no modal "Ative seu cupom aqui" (o checkout tem um cronômetro de ~10 min).</li>
+        <li>Preços da Decolar, 13 noites: Great Southern R$ 21.944 (1 cama; reembolsável até 01/12), Hotel Diplomat R$ 17.606, Veriu Central R$ 19.062, ibis Styles Central R$ 20.300, ADGE R$ 21.464, Novotel R$ 26.250 e Azzurro Pod Darling Harbour R$ 14.432 (pagar no destino, gera IOF; camas não informadas). A Decolar não mostra o tipo de cama.</li>
+      </ul>
     </div>
   </section>
-    </div>
+
+  <section class="section-h" id="status" aria-label="Andamento da pesquisa">
+    <span class="eyebrow">Andamento · coleta de 11/11/2026</span>
+    <h2>Sites pesquisados</h2>
+    <ul class="status" id="status4">
+      <li><span class="st ok">Pronto</span><b>Booking.com</b>12 páginas de hotel lidas no seu Chrome, sem login. Incluí o Cityview Studio do seu link: tem só 1 cama.</li>
+      <li><span class="st ok">Pronto</span><b>Hoteis.com</b>8 hotéis, reembolsável e não reembolsável, e o cupom HOTEISMD10OFF testado em 3 reservas.</li>
+      <li><span class="st ok">Pronto</span><b>Airbnb (em reais)</b>6 anúncios com 2+ camas confirmados nas 2 primeiras páginas da busca (cerca de 135 resultados). Pied à Terre, Lilyfield Nest e o de Rozelle estão indisponíveis.</li>
+      <li><span class="st ok">Pronto</span><b>Hostelworld</b>Scape Redfern, 790 on George, Maze, Big Hostel e Mad Monkey. Só o Scape Redfern tem 2 camas e banheiro privativo.</li>
+      <li><span class="st ok">Parcial</span><b>Decolar</b>Preços em R$ de 10 hotéis; não mostra camas. O cupom DIARIAS11 não foi achado nem testado.</li>
+      <li><span class="st blk">Sem preço</span><b>Agoda</b>A página do Vibe não mostrou a grade de preços; não abri os outros.</li>
+      <li><span class="st blk">Não refeito</span><b>Preços de 04/11</b>Maze, Stay Today, Sydney Central Inn e City Oasis seguem com o preço de 04/11 (Booking).</li>
+    </ul>
+  </section>
 
   <footer>
-    <p><b>2 pessoas (coleta de 04/11/2026):</b> Booking.com (busca por bairro, nota ≥ 7), Airbnb (2 camas ou mais, diária até A$ 280), Hostelworld (em euro) e Google Hotels (Haymarket e Ultimo). Notas do Booking de 0 a 10 e do Airbnb de 0 a 5.</p>
+    <p><b>Fontes (coleta de 11/11/2026):</b> Booking.com, Hoteis.com, Decolar e Airbnb (airbnb.com.br, em R$), todos lidos no seu Chrome sem login (exceto a conta já logada do Hoteis.com); Hostelworld (em €). Notas do Booking e do Hoteis.com de 0 a 10, do Airbnb de 0 a 5. Distâncias em linha reta até o ICC; a posição de aluguéis e de alguns hotéis é aproximada. Trajeto calculado com o folheto de tarifas TfNSW 2026. Reais pelo câmbio comercial de 11/11/2026 (open.er-api.com); a fatura do cartão terá IOF e spread, menos nos preços já em reais.</p>
   </footer>
 </div>
 
 <script>
-const ICC={lat:-33.8746,lon:151.1990};
-const P=[
- {id:1,k:"walk",name:"Stay Today Hostel",area:"Redfern",type:"Quarto twin, 2 camas de solteiro, banheiro compartilhado",total:1625,rate:"8.2/10 (54)",src:"Booking",go:"~25–30 min a pé",lat:-33.8925,lon:151.2035,url:"https://www.booking.com/hotel/au/stay-today-hostel.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Stay Today Hostel Redfern Sydney"},
- {id:2,k:"walk",name:"Maze Backpackers",area:"Haymarket",type:"Quarto twin, 2 beliches, banheiro compartilhado",total:1643,rate:"7.4/10 (2.456)",src:"Booking",go:"~10 min a pé",lat:-33.8800,lon:151.2072,url:"https://www.booking.com/hotel/au/maze-backpackers.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Maze Backpackers 417 Pitt St Sydney"},
- {id:3,k:"walk",name:"790 on George",area:"Haymarket",type:"Quarto twin, café da manhã incluso",total:2390,rate:"7.5/10 (1.415)",src:"Booking",go:"~10 min a pé",lat:-33.8812,lon:151.2042,url:"https://www.booking.com/hotel/au/on-george-backpackers.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"790 on George Backpackers Sydney"},
- {id:4,k:"walk",name:"Sydney Central Inn",area:"Haymarket",type:"Twin ou duplo, banheiro compartilhado",total:3285,rate:"7.3/10 (396)",src:"Booking",go:"~10 min a pé",lat:-33.8790,lon:151.2056,url:"https://www.booking.com/hotel/au/sydney-central-hostel.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Sydney Central Inn Haymarket"},
- {id:5,k:"walk",name:"City Oasis 2B2B",area:"Chippendale",type:"Apartamento inteiro, 2 quartos, 3 camas queen",total:4521,rate:"9.0/10 (2)",src:"Booking",go:"~20 min a pé",lat:-33.8878,lon:151.1990,url:"https://www.booking.com/hotel/au/city-oasis-2b2b-near-central-with-car-space.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Chippendale Sydney"},
- {id:6,k:"walk",name:"Novotel Darling Harbour",area:"Pyrmont",type:"Hotel, 2 camas de casal",total:6814,rate:"8.0/10 (6.242)",src:"Booking",go:"~5 min a pé",lat:-33.8722,lon:151.1962,url:"https://www.booking.com/hotel/au/sydney-darling-harbour.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Novotel Sydney Darling Harbour"},
- {id:7,k:"walk",name:"The Alta Apartments",area:"Surry Hills",type:"Apartamento inteiro, 2 quartos, 2 camas queen",total:6889,rate:"8.1/10 (249)",src:"Booking",go:"~25 min a pé",lat:-33.8862,lon:151.2112,url:"https://www.booking.com/hotel/au/alta-surry-hills.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Alta Surry Hills Sydney"},
- {id:8,k:"ride",name:"Lilyfield Nest",area:"Lilyfield",type:"Apartamento inteiro, 1 quarto, 2 camas",total:2352,rate:"4.81/5 (53)",src:"Airbnb",go:"Light rail L1 direto, ~15–20 min",lat:-33.8740,lon:151.1668,url:"https://www.airbnb.com/rooms/1254165048482825538?check_in=2026-12-03&check_out=2026-12-16&adults=2",q:"Lilyfield light rail station Sydney"},
- {id:9,k:"ride",fav:true,name:"Pied à Terre (Inner West)",area:"Camperdown",type:"Condo inteiro, 1 quarto, 2 camas, 1 banheiro",total:3036,rate:"4.96/5 (49)",src:"Airbnb",go:"Ônibus ~15–20 min ou ~40 min a pé",lat:-33.8890,lon:151.1785,url:"https://www.airbnb.com.br/rooms/54097119?adults=2&check_in=2026-12-03&check_out=2026-12-16",q:"Camperdown NSW",extra:"Preço com desconto; o original era A$ 3.358."},
- {id:10,k:"ride",name:"Apartamento em Rozelle",area:"Rozelle",type:"Apartamento inteiro, 2 camas ou mais",total:2633,rate:"4.79/5 (792)",src:"Airbnb",go:"Ônibus ~20–25 min",lat:-33.8622,lon:151.1708,url:"https://www.airbnb.com/rooms/10995325?check_in=2026-12-03&check_out=2026-12-16&adults=2",q:"Rozelle NSW"},
- {id:11,k:"ride",name:"Camperdown Cozy Corner 5",area:"Camperdown",type:"Apartamento, 1 quarto",total:4419,rate:"9.2/10 (20)",src:"Booking",go:"Ônibus ~15–20 min",lat:-33.8878,lon:151.1810,url:"https://www.booking.com/hotel/au/camperdown-cozy-corner-5.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Camperdown NSW"},
- {id:12,k:"ride",name:"Centre of Newtown 2 Bed",area:"Newtown",type:"Apartamento inteiro, 2 quartos",total:6160,rate:"8.4/10 (45)",src:"Booking",go:"Trem ou ônibus ~20 min",lat:-33.8975,lon:151.1795,url:"https://www.booking.com/hotel/au/centre-of-newtown-2-bed-apartment.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"Newtown NSW"},
- {id:13,k:"out",fav:true,name:"Stunning Views, Prime Sydney CBD Escape",area:"Ultimo, 185 Broadway",type:"Apartamento, 2 quartos, 3 camas (casal, solteiro e sofá-cama), 80 m²",total:null,rate:"8.0/10 (3)",src:"Booking",go:"~15–20 min a pé",lat:-33.8838,lon:151.1975,url:"https://www.booking.com/hotel/au/stunning-views-prime-sydney-cbd-escape-gym-pool.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2",q:"185 Broadway Ultimo NSW",extra:"Sem disponibilidade em dezembro. Em 3–16/jan/2027 custa ~A$ 3.050."},
- {id:14,check:true,k:"walk",name:"Scape Redfern",area:"Redfern",type:"Apartamento com 2 camas e banheiro próprio",total:940,cur:"EUR",rate:"sem avaliações",src:"Hostelworld",go:"~25 min a pé (1,8 km em linha reta)",lat:-33.8908,lon:151.2000,url:"https://www.hostelworld.com/hostels/p/338525/scape-redfern/",q:"Scape Redfern",extra:"Preço em euro (~€ 72/noite), fora da curva: confirmar quarto e valor."}
-];
-const TRANSPORT=100, TRANSPORT4=190;
-/* câmbio comercial de 10/11/2026 (open.er-api.com); a fatura do cartão terá IOF e spread */
-const FX={AUD:3.8058,EUR:6.1768,BRL:1};
+const P=[{"id": 1,"baths": 1,"rooms": 1,"beds": 2,"ok": true,"name": "Scape Redfern, apartamento com 2 camas","area": "Redfern, Eveleigh St","type": "Standard 2 Bed Apartment Ensuite: 2 camas (tipos não informados) e banheiro privativo. O Deluxe, também com 2 camas e banheiro, custa € 96,14 por noite (€ 1.250).","total": 929.63,"cur": "EUR","rate": "sem avaliações (novo) Hostelworld","src": "Hostelworld","go": "A pé, 25 a 30 min. Ou trem de Redfern até Central e a pé até o ICC.","lat": -33.89103,"lon": 151.19909,"url": "https://www.hostelworld.com/pwa/hosteldetails.php/Scape-Redfern/Sydney/338525?from=2026-12-03&to=2026-12-16&guests=2","q": "Scape Redfern Eveleigh St Redfern Sydney","canc": "Não informado: o Hostelworld mostra o rótulo \"Free Cancellation\" sem data (11/11). Confirme a data no checkout.","note": "É a opção mais barata com 2 camas e banheiro privativo. Sem avaliações. O Hostelworld mostra € 71,51 \"por quarto\" e não diz \"por noite\": o total de 13 noites (€ 929,63) é conta minha. Em 04/11 o preço era € 72 por noite.","g": 2,"k": "walk"},
+{"id": 2,"baths": "c","rooms": 1,"beds": 2,"ok": true,"name": "Maze Backpackers, twin privado","area": "Haymarket","type": "Quarto twin com 2 camas em beliche. Banheiro compartilhado no corredor.","total": 1643,"cur": "AUD","rate": "7.4/10 (2.456) Booking","src": "Booking","go": "A pé, 10 a 12 min.","lat": -33.8803,"lon": 151.2069,"url": "https://www.booking.com/hotel/au/maze-backpackers.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2&no_rooms=1&group_children=0&selected_currency=AUD","q": "Maze Backpackers Haymarket Sydney","canc": "Não informado: preço do Booking de 04/11, sem a política lida.","note": "Preço de 04/11, não reconferido. No Hostelworld de 11/11 o quarto para 2 aparece como Double (1 cama), a € 104,67 por noite.","g": 2,"k": "walk"},
+{"id": 3,"baths": "c","rooms": 1,"beds": 2,"ok": true,"name": "Stay Today Hostel, twin privado","area": "Redfern (segundo o Booking)","type": "Quarto twin com 2 camas de solteiro. Banheiro compartilhado.","total": 1625,"cur": "AUD","rate": "8.2/10 (54) Booking","src": "Booking","go": "A pé, 25 a 30 min.","lat": -33.8929,"lon": 151.205,"url": "https://www.booking.com/hotel/au/stay-today-hostel.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2&no_rooms=1&group_children=0&selected_currency=AUD","q": "Stay Today Hostel Redfern Sydney","canc": "Não informado: preço do Booking de 04/11, sem a política lida.","note": "Preço de 04/11, não reconferido. Posição aproximada: o Trip.com coloca o hostel em Leichhardt.","g": 2,"k": "walk"},
+{"id": 4,"baths": "c","rooms": 1,"beds": 2,"ok": true,"name": "790 on George, quarto twin","area": "Haymarket","type": "Quarto twin com 2 camas. Banheiro compartilhado.","total": 1353.82,"cur": "EUR","rate": "7.9/10 (2.008) Hostelworld","src": "Hostelworld","go": "A pé, 12 a 13 min.","lat": -33.8812,"lon": 151.2042,"url": "https://www.hostelworld.com/pwa/hosteldetails.php/790-on-George/Sydney/20285?from=2026-12-03&to=2026-12-16&guests=2","q": "790 on George Haymarket Sydney","canc": "Não informado: o Hostelworld mostra \"Free Cancellation\" sem data (11/11). Tarifa não reembolsável com café da manhã: € 93,73 por noite.","note": "€ 104,14 por noite × 13 (conta minha). No Booking, em 04/11, custava A$ 2.390.","g": 2,"k": "walk"},
+{"id": 5,"baths": "c","rooms": 1,"beds": 2,"ok": true,"name": "Sydney Central Inn, quarto duplo","area": "Haymarket","type": "Quarto duplo/twin. Banheiro compartilhado.","total": 3285,"cur": "AUD","rate": "7.3/10 (396) Booking","src": "Booking","go": "A pé, 10 min.","lat": -33.8791,"lon": 151.2073,"url": "https://www.booking.com/hotel/au/sydney-central-hostel.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2&no_rooms=1&group_children=0&selected_currency=AUD","q": "Sydney Central Inn Haymarket Sydney","canc": "Não informado: preço do Booking de 04/11.","note": "Preço de 04/11, não reconferido. Confirme que são 2 camas.","g": 2,"k": "walk"},
+{"id": 6,"baths": 1,"rooms": 1,"beds": 3,"bx": "+ sofá-cama na sala","ok": true,"name": "Accommodation Sydney Hyde Park, apartamento","area": "Darlinghurst, 38 College St","type": "1 quarto de 45 a 49 m²: 1 de casal e 2 de solteiro (Booking). Sala com sofá-cama. Banheiro privativo e sacada.","total": 13184.48,"cur": "BRL","ft": "R$ 14.503 sem cupom; R$ 13.184 com HOTEISMD10OFF","rate": "7.3/10 (962) Booking · 7.0 (23) Hoteis.com","src": "Hoteis.com","go": "A pé, 20 a 25 min.","lat": -33.87659,"lon": 151.21242,"url": "https://www.hoteis.com/ho3892236992/?chkin=2026-12-03&chkout=2026-12-16&rm1=a2","q": "Accommodation Sydney Hyde Park 38 College St Darlinghurst","canc": "Não reembolsável: sem reembolso nem crédito se cancelar ou alterar (Hoteis.com, 11/11).","note": "O cupom HOTEISMD10OFF foi aceito no checkout (testado em 11/11) e vale só até hoje, entrando por promo.melhoresdestinos.com.br/hoteiscom. No Booking: A$ 4.129 (≈ R$ 15.800), promoção 11.11, também não reembolsável.","g": 2,"k": "walk"},
+{"id": 7,"baths": 1,"rooms": 1,"beds": 2,"ok": true,"name": "57 Hotel, King + solteira","area": "Surry Hills, 57 Foveaux St","type": "Quarto King Plus One: 1 king e 1 de solteiro, 25 m². No Booking, o Twin tem 1 solteiro e 1 casal extragrande. Banheiro privativo (uma avaliação cita separação só por cortina).","total": 20310.08,"cur": "BRL","ft": "R$ 22.341 sem cupom; R$ 20.310 com HOTEISMD10OFF","rate": "8.8/10 (1.000) Hoteis.com · 8.4 (3.247) Booking","src": "Hoteis.com","go": "A pé, 30 a 35 min. Ou trem de Central até Town Hall e a pé.","lat": -33.88438,"lon": 151.21031,"url": "https://www.hoteis.com/ho509775/57-hotel-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a2","q": "57 Hotel 57 Foveaux St Surry Hills","canc": "Cancelamento grátis até 02/12/2026, 14h (Sydney), na tarifa reembolsável do Hoteis.com. Depois, cobra a 1ª diária mais impostos. A não reembolsável custa R$ 25.036 sem cupom.","note": "O cupom HOTEISMD10OFF funcionou na tarifa reembolsável (testado em 11/11) e vale só até hoje. Os quartos de 2 camas (2 queen, twin) estão esgotados.","g": 2,"k": "walk"},
+{"id": 8,"baths": 1,"rooms": 1,"beds": 2,"bx": "(2 solteiras sob pedido)","ok": true,"name": "Vibe Hotel Sydney, King ou 2 solteiras","area": "CBD, 111 Goulburn St","type": "Quarto de 38 m²: 1 king ou 2 de solteiro. Peça as 2 de solteiro. Banheiro privativo.","total": 21018.26,"cur": "BRL","ft": "R$ 23.120 sem cupom; R$ 21.018 com HOTEISMD10OFF","rate": "8.6/10 (1.005) Hoteis.com · 8.3 (4.271) Booking","src": "Hoteis.com","go": "A pé, 15 a 20 min.","lat": -33.8788,"lon": 151.2095,"url": "https://www.hoteis.com/ho136297/vibe-hotel-sydney-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a2","q": "Vibe Hotel Sydney 111 Goulburn St","canc": "Cancelamento grátis até 26/11/2026, 14h (Sydney), na tarifa reembolsável do Hoteis.com. Depois, cobra 100%.","note": "Cupom aceito na tarifa reembolsável (11/11). Booking: A$ 6.694 (≈ R$ 25.650), A$ 6.025 para membros logados, grátis até 26/11. Caução de A$ 200 no check-in (Agoda).","g": 2,"k": "walk"},
+{"id": 9,"baths": 1,"rooms": 1,"beds": 2,"ok": true,"name": "Mercure Sydney, 2 camas de casal","area": "Chippendale, 818 George St","type": "Quarto standard com 2 camas de casal. Banheiro privativo (a confirmar).","total": 23939,"cur": "BRL","rate": "8.8/10 (1.329) Hoteis.com","src": "Hoteis.com","go": "A pé, 25 a 30 min.","lat": -33.8839,"lon": 151.2026,"url": "https://www.hoteis.com/ho185750/mercure-sydney-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a2","q": "Mercure Sydney 818 George St Chippendale","canc": "Não reembolsável (há tarifa flexível, mais cara): reembolso total até 02/12/2026 por R$ 26.192.","note": "Não testei o cupom nesta tarifa. O cupom não vale em tarifa não reembolsável de alguns hotéis.","g": 2,"k": "walk"},
+{"id": 10,"baths": 1,"rooms": 1,"beds": 2,"ok": true,"name": "Novotel Sydney on Darling Harbour","area": "Darling Harbour, 100 Murray St","type": "Quarto superior de 28 m² com 2 camas de casal. Banheiro privativo.","total": 26249,"cur": "BRL","rate": "8.6/10 (1.376) Hoteis.com","src": "Hoteis.com","go": "A pé, 4 min. Fica ao lado do ICC.","lat": -33.87204,"lon": 151.19778,"url": "https://www.hoteis.com/ho181570/novotel-sydney-on-darling-harbour-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a2","q": "Novotel Sydney on Darling Harbour 100 Murray St","canc": "Não reembolsável (há tarifa flexível, mais cara): reembolso total até 02/12/2026 por R$ 30.881.","note": "Na Decolar custa R$ 26.250, igual. Em 04/11 o Booking mostrava A$ 6.814 (≈ R$ 26.100).","g": 2,"k": "walk"},
+{"id": 11,"baths": 2.5,"rooms": 2,"beds": 3,"ok": true,"name": "Woolloomooloo, 2 quartos","area": "Woolloomooloo","type": "Quarto 1: 1 queen. Quarto 2: 2 de solteiro. 2 banheiros e 1 lavabo.","total": 13468,"cur": "BRL","rate": "4.86/5 (7) Airbnb","src": "Airbnb","go": "Ônibus ou trem até a região de Town Hall e a pé. Total: 30 a 35 min (a confirmar).","lat": -33.8695,"lon": 151.22,"url": "https://www.airbnb.com.br/rooms/812903123440616606?check_in=2026-12-03&check_out=2026-12-16&adults=2","q": "Woolloomooloo Sydney","canc": "Cancelamento grátis só nas primeiras 24 h após reservar. Depois, não reembolsável.","note": "Só 7 avaliações. Posição aproximada (Airbnb borra ~150 m). Preço pagando em reais no airbnb.com.br, sem IOF.","g": 2,"k": "ride"},
+{"id": 12,"baths": 2,"rooms": 2,"beds": 2,"bx": "+ sofá-cama","ok": true,"name": "Camperdown, 2 quartos","area": "Camperdown","type": "Quarto 1: 1 queen. Quarto 2: 1 queen. Sofá-cama na sala. 2 banheiros.","total": 17512,"cur": "BRL","rate": "4.74/5 (23) Airbnb","src": "Airbnb","go": "Ônibus pela Parramatta Rd, 15 a 20 min. Ou 40 min a pé.","lat": -33.8885,"lon": 151.1795,"url": "https://www.airbnb.com.br/rooms/708445011038132963?check_in=2026-12-03&check_out=2026-12-16&adults=2","q": "Camperdown Sydney","canc": "Cancelamento grátis só nas primeiras 24 h após reservar. Antes de 26/11, reembolso parcial.","note": "Posição aproximada. Preço em reais no airbnb.com.br, sem IOF.","g": 2,"k": "ride"},
+{"id": 13,"baths": 2,"rooms": 2,"beds": 2,"ok": true,"name": "Haymarket, 2 quartos","area": "Haymarket","type": "Quarto 1: 1 queen. Quarto 2: 1 queen. 2 banheiros.","total": 18611,"cur": "BRL","rate": "4.94/5 (16) Airbnb","src": "Airbnb","go": "A pé, 10 a 15 min (a confirmar pelo endereço).","lat": -33.88,"lon": 151.2045,"url": "https://www.airbnb.com.br/rooms/1567691555675190174?check_in=2026-12-03&check_out=2026-12-16&adults=2","q": "Haymarket Sydney","canc": "Cancelamento grátis só nas primeiras 24 h após reservar. Antes de 26/11, reembolso parcial.","note": "Posição aproximada. Preço em reais no airbnb.com.br, sem IOF. Boa nota e perto do ICC.","g": 2,"k": "walk"},
+{"id": 14,"baths": 1.5,"rooms": 2,"beds": 2,"ok": true,"name": "Glebe, townhouse de 2 quartos","area": "Glebe","type": "Quarto 1: 1 queen. Quarto 2: 1 queen. 1 banheiro e 1 lavabo.","total": 20178,"cur": "BRL","rate": "4.91/5 (12) Airbnb","src": "Airbnb","go": "A pé, 25 a 30 min. Ou light rail L1.","lat": -33.88,"lon": 151.186,"url": "https://www.airbnb.com.br/rooms/1408891?check_in=2026-12-03&check_out=2026-12-16&adults=2","q": "Glebe Sydney","canc": "Cancelamento grátis só nas primeiras 24 h após reservar. Antes de 26/11, reembolso parcial.","note": "Posição aproximada. Preço em reais no airbnb.com.br, sem IOF.","g": 2,"k": "walk"},
+{"id": 15,"baths": 2,"rooms": 2,"beds": 2,"bx": "+ sofá-cama","ok": true,"name": "Redfern, 2 quartos","area": "Redfern","type": "Quarto 1: 1 queen. Quarto 2: 1 queen. Sofá-cama. 2 banheiros.","total": 20834,"cur": "BRL","rate": "4.94/5 (18) Airbnb","src": "Airbnb","go": "A pé, 30 min. Ou trem até Central.","lat": -33.8925,"lon": 151.204,"url": "https://www.airbnb.com.br/rooms/1191743448660555945?check_in=2026-12-03&check_out=2026-12-16&adults=2","q": "Redfern Sydney","canc": "Cancelamento grátis só nas primeiras 24 h após reservar. Antes de 26/11, reembolso parcial.","note": "Posição aproximada. Preço em reais no airbnb.com.br, sem IOF.","g": 2,"k": "walk"},
+{"id": 16,"baths": 2,"rooms": 2,"beds": 3,"ok": true,"name": "City Oasis 2B2B, Chippendale","area": "Chippendale","type": "Apartamento de 2 quartos com 3 queen. 2 banheiros.","total": 4521,"cur": "AUD","rate": "9.0/10 (2) Booking","src": "Booking","go": "A pé, 20 min.","lat": -33.885,"lon": 151.202,"url": "https://www.booking.com/hotel/au/city-oasis-2b2b-near-central-with-car-space.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2&no_rooms=1&group_children=0&selected_currency=AUD","q": "City Oasis 2B2B Chippendale Sydney","canc": "Não informado: preço do Booking de 04/11.","note": "Preço de 04/11, não reconferido. Só 2 avaliações. Posição aproximada.","g": 2,"k": "walk"},
+{"id": 17,"baths": 1,"rooms": 1,"beds": 1,"ok": false,"name": "Cityview Studio Accommodation","area": "Leichhardt, 347-349 Parramatta Rd","type": "Standard Double Studio: 1 cama de casal. O Deluxe Queen também tem 1 cama. Pequeno e com barulho, segundo o anúncio.","total": 8272,"cur": "BRL","rate": "7.0/10 (407) Booking","src": "Booking","go": "Light rail L1 ou ônibus pela Parramatta Rd. Cerca de 4 km do ICC: 25 a 30 min.","lat": -33.8836,"lon": 151.1565,"url": "https://www.booking.com/hotel/au/cityview-studio-accommodation-sydney.en-gb.html?checkin=2026-12-03&checkout=2026-12-16&group_adults=2&no_rooms=1&group_children=0","q": "Cityview Studio Accommodation 347 Parramatta Rd Leichhardt","canc": "Não reembolsável, pago online (Booking, 11/11). Caução de A$ 100 em dinheiro na chegada.","note": "Só 1 cama: não serve. Deluxe Queen: R$ 9.084. Para 2 a 16/dez (14 noites): R$ 8.770. Em A$, o Standard Double sai A$ 2.151. O endereço fica a 4,1 km de Darling Harbour. Posição aproximada.","g": 2,"k": "ride"},
+{"id": 18,"baths": 1,"rooms": 1,"beds": 1,"ok": false,"name": "Great Southern Hotel","area": "Haymarket, 717 George St","type": "Só quarto queen (1 cama). O Twin está esgotado nas datas.","total": 21944,"cur": "BRL","rate": "8.8/10 (2.073) Hoteis.com","src": "Decolar","go": "A pé, 10 min.","lat": -33.8809,"lon": 151.2044,"url": "https://www.decolar.com/accommodations/detail/4275768/2026-12-03/2026-12-16/2?user_searched_gid=CIT_7157&currency=BRL","q": "Great Southern Hotel 717 George St Sydney","canc": "Cancelamento grátis até 01/12/2026, 10h (Decolar). Depois, multa de 100% até 02/12, 10h. Pague depois, sem cobrança agora.","note": "Só 1 cama: não serve. No Booking: A$ 5.718 (não reembolsável).","g": 2,"k": "walk"}];
+const TRANSPORT4=95;
+/* câmbio comercial de 11/11/2026 (open.er-api.com); a fatura do cartão terá IOF e spread */
+const FX={AUD:3.8326,EUR:6.2269,BRL:1};
 const brl=(v,cur)=>Math.round(v*FX[cur||"AUD"]);
 const R=v=>"R$ "+v.toLocaleString("pt-BR");
-const fmtOrig=p=>p.cur==="BRL"?(p.src==="Decolar"?"pago em R$, sem IOF":"preço em R$, com cupom"):(p.cur==="EUR"?"€ ":"A$ ")+p.total.toLocaleString("pt-BR");
+const fmtOrig=p=>p.ft?p.ft:p.cur==="BRL"?"pago em R$, sem IOF":(p.cur==="EUR"?"€ ":"A$ ")+p.total.toLocaleString("pt-BR");
 const fmt=p=>R(brl(p.total,p.cur));
 const siteName=p=>p.url.includes("google.com/travel")?"Google Hotels":p.url.includes("trip.com")?"Trip.com":p.url.includes("agoda")?"Agoda":p.src;
-const mapUrl=p=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.g===4?p.lat+","+p.lon:p.q);
+const mapUrl=p=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.lat?p.lat+","+p.lon:p.q);
 const links=(p,cls="tlinks")=>`<span class="${cls}"><a href="${p.url}" target="_blank" rel="noopener">Ver no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Mapa</a></span>`;
 
-/* ---------- mapa ---------- */
-/* projeção local: 1 unidade ≈ 10,8 m; viewBox 540×500 cobre ~5,9 km × 4,5 km */
-const LON0=151.158, LAT0=-33.856, KX=9220, KY=11100;
-const X=lon=>(lon-LON0)*KX, Y=lat=>(LAT0-lat)*KY;
-const pts=a=>a.map(([lo,la])=>X(lo).toFixed(1)+","+Y(la).toFixed(1)).join(" ");
-const svgNS="http://www.w3.org/2000/svg";
-const map=document.getElementById("map");
-const mapbox=document.getElementById("mapbox");
-const STYLE_KEYS=new Set(["fill","stroke","font-family","font-size","font-weight","font-style","opacity","letter-spacing"]);
-function el(tag,attrs,parent=map){const e=document.createElementNS(svgNS,tag);for(const k in attrs){if(STYLE_KEYS.has(k))e.style.setProperty(k,k==="font-size"?attrs[k]+"px":attrs[k]);else e.setAttribute(k,attrs[k])}parent.appendChild(e);return e}
-function label(x,y,text,o={}){const t=el("text",{x,y,"text-anchor":o.anchor||"middle",fill:o.fill||"var(--muted)","font-size":o.size||10,"font-family":o.mono?"var(--f-mono)":"var(--f-body)","font-weight":o.weight||400,"font-style":o.italic?"italic":"normal","letter-spacing":o.ls||"0","pointer-events":"none"},o.parent||map);t.textContent=text;return t}
-
-/* água: Darling Harbour / Cockle Bay (leste) e Johnstons, Blackwattle e Rozelle Bay (oeste) */
-const WATER=[
-  [[151.2010,-33.8560],[151.2020,-33.8580],[151.2035,-33.8640],[151.2030,-33.8690],[151.2020,-33.8725],[151.2000,-33.8730],[151.1992,-33.8700],[151.1985,-33.8670],[151.1965,-33.8640],[151.1945,-33.8600],[151.1930,-33.8560]],
-  [[151.1925,-33.8560],[151.1930,-33.8620],[151.1925,-33.8680],[151.1920,-33.8720],[151.1905,-33.8760],[151.1880,-33.8768],[151.1862,-33.8742],[151.1856,-33.8705],[151.1846,-33.8680],[151.1836,-33.8700],[151.1826,-33.8740],[151.1790,-33.8756],[151.1740,-33.8732],[151.1728,-33.8700],[151.1760,-33.8678],[151.1800,-33.8662],[151.1840,-33.8650],[151.1860,-33.8618],[151.1870,-33.8560]]
-];
-/* parques e campi: [nome, centro lon, lat, largura (graus lon), altura (graus lat)] */
-const PARKS=[
-  ["Victoria Park",151.1915,-33.8870,.0032,.0030],["Prince Alfred Park",151.2045,-33.8878,.0022,.0036],["Wentworth Park",151.1895,-33.8782,.0026,.0028],
-  ["Hyde Park",151.2112,-33.8730,.0012,.0062],["Tumbalong Park",151.2010,-33.8752,.0014,.0014],["Jubilee Park",151.1808,-33.8766,.0030,.0022],
-  ["USYD",151.1875,-33.8886,.0062,.0056],["UTS",151.2005,-33.8832,.0018,.0016],["Belmore Park",151.2062,-33.8822,.0012,.0012]
-];
-/* ruas: [nome, pontos, principal?] */
-const ROADS=[
-  ["George St",[[151.2080,-33.8560],[151.2068,-33.8660],[151.2066,-33.8731],[151.2063,-33.8800],[151.2060,-33.8833]],1],
-  ["Broadway · Parramatta Rd",[[151.2058,-33.8835],[151.2020,-33.8840],[151.1970,-33.8842],[151.1935,-33.8858],[151.1880,-33.8870],[151.1830,-33.8880],[151.1750,-33.8895],[151.1620,-33.8915]],1],
-  ["City Rd · King St",[[151.1935,-33.8858],[151.1900,-33.8905],[151.1870,-33.8930],[151.1820,-33.8965],[151.1780,-33.8985],[151.1700,-33.9030]],1],
-  ["Harris St",[[151.1945,-33.8640],[151.1958,-33.8700],[151.1965,-33.8760],[151.1968,-33.8820],[151.1975,-33.8840]],0],
-  ["Western Distributor · Anzac Bridge",[[151.2020,-33.8722],[151.1990,-33.8706],[151.1960,-33.8692],[151.1925,-33.8688],[151.1850,-33.8690],[151.1800,-33.8660],[151.1720,-33.8620],[151.1620,-33.8600]],1],
-  ["Cleveland St",[[151.2160,-33.8900],[151.2060,-33.8910],[151.1980,-33.8916],[151.1935,-33.8902]],0],
-  ["Regent St",[[151.2040,-33.8840],[151.2010,-33.8880],[151.1995,-33.8920],[151.1990,-33.8980]],0],
-  ["Bridge Rd",[[151.1935,-33.8780],[151.1880,-33.8790],[151.1840,-33.8810],[151.1800,-33.8850],[151.1760,-33.8880]],0],
-  ["Glebe Point Rd",[[151.1850,-33.8692],[151.1860,-33.8760],[151.1870,-33.8820],[151.1890,-33.8862]],0],
-  ["Elizabeth St",[[151.2100,-33.8690],[151.2095,-33.8780],[151.2080,-33.8860],[151.2065,-33.8910]],0],
-  ["Victoria Rd",[[151.1720,-33.8620],[151.1690,-33.8680],[151.1670,-33.8720]],0]
-];
-/* trem (T-lines): Central ↔ Town Hall e Central ↔ Redfern ↔ Newtown */
-const TRAIN=[
-  [[151.2063,-33.8832],[151.2065,-33.8780],[151.2068,-33.8734],[151.2060,-33.8690],[151.2070,-33.8560]],
-  [[151.2063,-33.8832],[151.2030,-33.8870],[151.1990,-33.8917],[151.1900,-33.8955],[151.1795,-33.8975],[151.1690,-33.9010]]
-];
-const TSTOPS=[["Central",151.2063,-33.8832,"end",-10,-6],["Town Hall",151.2068,-33.8734,"start",8,4],["Redfern",151.1990,-33.8917,"start",8,10],["Newtown",151.1795,-33.8975,"start",8,10],["Macdonaldtown",151.1900,-33.8955,"start",6,12]];
-/* light rail L1 (Dulwich Hill) com estações, e L2/L3 pela George St */
-const L1=[["Central",151.2063,-33.8832],["Capitol Sq",151.2060,-33.8800],["Paddy's Mkt",151.2038,-33.8790],["Exhibition",151.2005,-33.8768],["Convention",151.1990,-33.8745],["Pyrmont Bay",151.1960,-33.8697],["The Star",151.1946,-33.8680],["Fish Market",151.1920,-33.8725],["Wentworth Pk",151.1912,-33.8768],["Glebe",151.1875,-33.8787],["Jubilee Pk",151.1825,-33.8775],["Rozelle Bay",151.1750,-33.8770],["Lilyfield",151.1680,-33.8735]];
-const L23=[[151.2063,-33.8832],[151.2062,-33.8780],[151.2066,-33.8740],[151.2068,-33.8700],[151.2070,-33.8655],[151.2075,-33.8600],[151.2085,-33.8560]];
-/* bairros */
-const HOODS=[["CBD",151.2085,-33.8665],["Barangaroo",151.2000,-33.8590],["Pyrmont",151.1945,-33.8650],["Haymarket",151.2075,-33.8830],["Ultimo",151.1960,-33.8800],["Chippendale",151.1990,-33.8862],["Surry Hills",151.2125,-33.8880],["Redfern",151.2055,-33.8945],["Darlington",151.1935,-33.8920],["Glebe",151.1840,-33.8815],["Camperdown",151.1770,-33.8860],["Newtown",151.1760,-33.8960],["Annandale",151.1705,-33.8820],["Rozelle",151.1725,-33.8650],["Lilyfield",151.1660,-33.8700],["Forest Lodge",151.1830,-33.8845]];
-
-const layers={};
-function drawMap(){
-  for(const n of ["base","water","parks","roads","rail","rings","refs","lines","marks"]) layers[n]=el("g",{class:"ly-"+n});
-  el("rect",{x:0,y:0,width:540,height:500,fill:"var(--land)"},layers.base);
-  for(const w of WATER) el("polygon",{points:pts(w),fill:"var(--water)"},layers.water);
-  label(X(151.1990),Y(-33.8625),"Darling Harbour",{italic:true,size:10.5,fill:"var(--accent)",parent:layers.water});
-  label(X(151.1888),Y(-33.8718),"Blackwattle Bay",{italic:true,size:9,fill:"var(--accent)",parent:layers.water});
-  label(X(151.1785),Y(-33.8712),"Rozelle Bay",{italic:true,size:9,fill:"var(--accent)",parent:layers.water});
-
-  for(const [n,lo,la,w,h] of PARKS){
-    el("rect",{x:X(lo+w/2)*0+X(lo-w/2),y:Y(la+h/2),width:w*KX,height:h*KY,rx:3,fill:"var(--park)",stroke:"var(--road)","stroke-width":".6"},layers.parks);
-    if(h*KY>22) label(X(lo),Y(la)+3,n,{size:8.5,parent:layers.parks});
-  }
-  for(const [n,p,major] of ROADS){
-    el("polyline",{points:pts(p),fill:"none",stroke:major?"var(--road-major)":"var(--road)","stroke-width":major?3:1.6,"stroke-linejoin":"round","stroke-linecap":"round"},layers.roads);
-  }
-  /* nomes das ruas principais, ao longo da via */
-  roadLabel("Broadway · Parramatta Rd",151.1905,-33.8864,-7);
-  roadLabel("King St",151.1835,-33.8957,-29);
-  roadLabel("Anzac Bridge",151.1888,-33.8700,0);
-  roadLabel("George St",151.2066,-33.8690,-88);
-
-  for(const t of TRAIN) el("polyline",{points:pts(t),fill:"none",stroke:"var(--rail)","stroke-width":2,"stroke-dasharray":"6 4","stroke-linejoin":"round"},layers.rail);
-  el("polyline",{points:pts(L23),fill:"none",stroke:"var(--fav)","stroke-width":1.6,opacity:".55"},layers.rail);
-  el("polyline",{points:pts(L1.map(s=>[s[1],s[2]])),fill:"none",stroke:"var(--fav)","stroke-width":3.2,"stroke-linejoin":"round","stroke-linecap":"round"},layers.rail);
-  label(X(151.2080),Y(-33.8630),"L2/L3",{size:8,fill:"var(--fav)",mono:true,weight:700,parent:layers.rail});
-  for(const [n,lo,la] of L1){
-    el("circle",{cx:X(lo),cy:Y(la),r:2.8,fill:"var(--surface)",stroke:"var(--fav)","stroke-width":1.6},layers.rail);
-    const side=["Pyrmont Bay","The Star","Glebe","Jubilee Pk","Rozelle Bay","Lilyfield","Wentworth Pk","Fish Market"].includes(n);
-    if(n==="Central"||n==="Capitol Sq"||n==="Paddy's Mkt"||n==="Exhibition")continue;
-    const above=["Pyrmont Bay","The Star","Lilyfield","Rozelle Bay"].includes(n);
-    label(X(lo)+(side?0:7),Y(la)+(above?-6:(side?12:3)),n,{size:7.5,fill:"var(--fav)",anchor:side?"middle":"start",parent:layers.rail});
-  }
-  for(const [n,lo,la,anchor,dx,dy] of TSTOPS){
-    el("rect",{x:X(lo)-4,y:Y(la)-4,width:8,height:8,rx:1.5,fill:"var(--surface)",stroke:"var(--rail)","stroke-width":1.8},layers.rail);
-    label(X(lo)+dx,Y(la)+dy,n,{size:8.5,weight:600,fill:"var(--fg)",anchor,parent:layers.rail});
-  }
-
-  for(const [km,lab] of [[1.2,"15 min"],[2.4,"30 min"]]){
-    const r=km*1000/10.85;
-    el("circle",{cx:X(ICC.lon),cy:Y(ICC.lat),r,fill:"none",stroke:"var(--ring)","stroke-width":1.2,"stroke-dasharray":"4 4",opacity:".75"},layers.rings);
-    label(X(ICC.lon)-r*0.71+2,Y(ICC.lat)+r*0.71+10,lab+" a pé",{size:8.5,fill:"var(--ring)",mono:true,anchor:"start",parent:layers.rings});
-  }
-
-  for(const [n,lo,la] of HOODS) label(X(lo),Y(la),n.toUpperCase(),{size:8,fill:"var(--muted)",ls:".12em",weight:600,parent:layers.refs});
-
-  const g=el("g",{},layers.refs);
-  el("circle",{cx:X(ICC.lon),cy:Y(ICC.lat),r:16,fill:"var(--accent)",opacity:".18"},g);
-  el("circle",{cx:X(ICC.lon),cy:Y(ICC.lat),r:12,fill:"var(--accent)",stroke:"var(--surface)","stroke-width":2},g);
-  label(X(ICC.lon),Y(ICC.lat)+3.5,"ICC",{size:9,fill:"var(--surface)",mono:true,weight:700,parent:g});
-  label(X(ICC.lon)-15,Y(ICC.lat)-15,"ICC Sydney",{size:10.5,fill:"var(--fg)",weight:700,anchor:"end",parent:g});
-
-  /* marcadores, afastados uns dos outros para não se cobrirem */
-  const pos=P.map(p=>({p,x:X(p.lon),y:Y(p.lat),ox:X(p.lon),oy:Y(p.lat)}));
-  for(const o of pos){
-    const off=o.y<12?"↑":o.y>488?"↓":o.x<12?"←":o.x>528?"→":"";
-    if(off){o.off=off;o.x=Math.max(16,Math.min(524,o.x));o.y=Math.max(16,Math.min(484,o.y));o.ox=o.x;o.oy=o.y}
-  }
-  const icc={x:X(ICC.lon),y:Y(ICC.lat)};
-  for(let it=0;it<40;it++){
-    for(let i=0;i<pos.length;i++)for(let j=i+1;j<pos.length;j++){
-      const a=pos[i],b=pos[j];let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.01;const min=26;
-      if(d<min){const push=(min-d)/2;dx/=d;dy/=d;a.x-=dx*push;a.y-=dy*push;b.x+=dx*push;b.y+=dy*push}
-    }
-    for(const a of pos){let dx=a.x-icc.x,dy=a.y-icc.y,d=Math.hypot(dx,dy)||.01;if(d<30){a.x+=dx/d*(30-d);a.y+=dy/d*(30-d)}}
-  }
-  for(const o of pos){
-    if(Math.hypot(o.x-o.ox,o.y-o.oy)>4) el("line",{x1:o.ox,y1:o.oy,x2:o.x,y2:o.y,stroke:"var(--muted)","stroke-width":1,opacity:".6"},layers.lines);
-  }
-  for(const o of pos){
-    const p=o.p,color=p.k==="walk"?"var(--walk)":p.k==="ride"?"var(--ride)":"var(--bad)";
-    const m=el("g",{class:"mk","data-id":p.id,tabindex:"0",role:"button","aria-label":p.name},layers.marks);
-    if(p.fav||p.own) el("circle",{cx:o.x,cy:o.y,r:15,fill:"none",stroke:p.own?"var(--own)":"var(--fav)","stroke-width":2.5},m);
-    el("circle",{cx:o.x,cy:o.y,r:11,fill:color,stroke:"var(--surface)","stroke-width":2,class:"mkc"},m);
-    label(o.x,o.y+3.8,p.id,{size:10.5,fill:"#fff",mono:true,weight:700,parent:m});
-    if(o.off&&o.off!=="↓"&&!pos.some(q=>q!==o&&q.off&&q.p.id<p.id&&Math.hypot(q.x-o.x,q.y-o.y)<70)){
-      const nm=p.area.split(/[,(\/]/)[0].trim();const r=o.x>270,top=o.y<250;
-      label(o.x+(r?-16:16),o.y+(top?4:-14),o.off+" "+nm,{size:8.5,anchor:r?"end":"start",fill:"var(--fg)",weight:600,parent:m})}
-    m.addEventListener("click",()=>select(p.id,true));
-    m.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(p.id,true)}});
-    m.addEventListener("pointerenter",()=>showTip(p,m));
-    m.addEventListener("focus",()=>showTip(p,m));
-    m.addEventListener("pointerleave",hideTip);
-    m.addEventListener("blur",hideTip);
-    o.el=m;
-  }
-  window.__pos=pos;
+/* ---------- mapa (Leaflet + OpenStreetMap/CARTO) ---------- */
+const ICC={lat:-33.8746,lon:151.1990};
+const lmap=L.map("lmap",{scrollWheelZoom:false,zoomControl:true}).setView([ICC.lat,ICC.lon],13);
+const tiles=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:'Mapa &copy; Esri, HERE, Garmin, &copy; OpenStreetMap'}).addTo(lmap);
+/* no viewer de artifacts os blocos externos são bloqueados: troca por uma base vetorial do OSM (base.js) */
+let vectorOn=false;
+function vectorBase(){
+  if(vectorOn||typeof BASE==="undefined")return;vectorOn=true;lmap.removeLayer(tiles);
+  /* cores vêm do CSS (classes vb-*), então acompanham a troca de tema depois do carregamento */
+  const o={renderer:L.svg({padding:.3}),interactive:false,smoothFactor:1.5};
+  L.polygon(BASE.parks,{...o,className:"vb-park"}).addTo(lmap);
+  L.polygon(BASE.water,{...o,className:"vb-water"}).addTo(lmap);
+  BASE.roads.forEach((ls,k)=>L.polyline(ls,{...o,className:"vb-road"+(k>=2?" major":""),weight:[1.2,1.8,2.6,3.4][k]}).addTo(lmap));
+  L.polyline(BASE.rail,{...o,className:"vb-rail",weight:2,dashArray:"6 4"}).addTo(lmap);
+  L.polyline(BASE.lrail,{...o,className:"vb-lrail",weight:2.4}).addTo(lmap);
+  lmap.attributionControl.addAttribution("Base &copy; OpenStreetMap");
 }
-function roadLabel(text,lo,la,rot){const t=label(X(lo),Y(la),text,{size:7.5,fill:"var(--muted)",italic:true,parent:layers.roads});t.setAttribute("transform",`rotate(${rot} ${X(lo)} ${Y(la)})`)}
-
-/* tooltip */
-const tip=document.getElementById("tip");
-function showTip(p,target){
-  tip.innerHTML=`<b>${p.id}. ${p.name}</b>${p.area} · ${p.total?fmt(p)+" por 13 noites":"esgotado"}<br>${p.go}`;
-  tip.hidden=false;
-  const r=target.getBoundingClientRect(),b=mapbox.querySelector(".mapframe").getBoundingClientRect();
-  let x=r.left-b.left+r.width/2,y=r.top-b.top;
-  const half=tip.offsetWidth/2;x=Math.max(half+4,Math.min(b.width-half-4,x));
-  tip.style.left=x+"px";tip.style.top=y+"px";
+tiles.on("tileerror",vectorBase);
+for(const [m,lab] of [[1200,"15 min a pé"],[2400,"30 min a pé"]]){
+  L.circle([ICC.lat,ICC.lon],{radius:m,color:"#4b3fd1",weight:1.3,dashArray:"5 5",fill:false,interactive:false}).addTo(lmap);
 }
-function hideTip(){tip.hidden=true}
-
-/* zoom e arrasto via viewBox */
-const VB0={x:0,y:0,w:540,h:500};let vb={...VB0};
-function clampVB(){vb.x=Math.max(0,Math.min(VB0.w-vb.w,vb.x));vb.y=Math.max(0,Math.min(VB0.h-vb.h,vb.y))}
-function applyVB(){
-  map.setAttribute("viewBox",`${vb.x.toFixed(1)} ${vb.y.toFixed(1)} ${vb.w.toFixed(1)} ${vb.h.toFixed(1)}`);
-  const zoomed=vb.w<VB0.w-1;map.style.touchAction=zoomed?"none":"pan-y";map.style.cursor=zoomed?"grab":"default";
-  const px=map.getBoundingClientRect().width/vb.w; /* px por unidade */
-  document.getElementById("scale").style.setProperty("--w",(500/10.85*px).toFixed(0)+"px");
+L.marker([ICC.lat,ICC.lon],{icon:L.divIcon({className:"iccmk",html:"ICC",iconSize:[34,34],iconAnchor:[17,17]}),zIndexOffset:1000,title:"ICC Sydney"}).addTo(lmap).bindTooltip("ICC Sydney, 14 Darling Dr",{direction:"top",offset:[0,-16]});
+const MK={};
+function makeMarker(p){
+  const icon=L.divIcon({className:"",html:`<span class="lmk ${p.k}${p.serve?" ok":""}">${p.id}</span>`,iconSize:[28,28],iconAnchor:[14,14]});
+  const m=L.marker([p.lat,p.lon],{icon,title:p.name,keyboard:true});
+  const per=pp(p);
+  m.bindTooltip(`<b>${p.id}. ${p.name}</b><br>${p.area} · ${rb(p)}<br>${per?R(per)+" por pessoa":"—"} · ${CANC[cancK(p)][0]} · ${p.ok?"tem 2 camas":"só 1 cama"}`,{direction:"top",offset:[0,-14]});
+  m.on("click",()=>select(p.id,true));
+  MK[p.id]=m;return m;
 }
-function zoom(f,cx,cy){
-  cx=cx??vb.x+vb.w/2;cy=cy??vb.y+vb.h/2;
-  const w=Math.min(VB0.w,Math.max(VB0.w/5,vb.w/f)),h=w*VB0.h/VB0.w;
-  vb={x:cx-w/2,y:cy-h/2,w,h};clampVB();applyVB();
-}
-document.getElementById("z-in").addEventListener("click",()=>zoom(1.6));
-document.getElementById("z-out").addEventListener("click",()=>zoom(1/1.6));
-document.getElementById("z-reset").addEventListener("click",()=>{vb={...VB0};applyVB()});
-let drag=null;
-map.addEventListener("pointerdown",e=>{if(vb.w>=VB0.w-1||e.target.closest(".mk"))return;drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y};map.setPointerCapture(e.pointerId);map.style.cursor="grabbing";hideTip()});
-map.addEventListener("pointermove",e=>{if(!drag)return;const s=vb.w/map.getBoundingClientRect().width;vb.x=drag.vx-(e.clientX-drag.x)*s;vb.y=drag.vy-(e.clientY-drag.y)*s;clampVB();map.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`)});
-const endDrag=()=>{if(drag){drag=null;applyVB()}};
-map.addEventListener("pointerup",endDrag);map.addEventListener("pointercancel",endDrag);
-map.addEventListener("dblclick",e=>{const r=map.getBoundingClientRect();zoom(1.8,vb.x+(e.clientX-r.left)/r.width*vb.w,vb.y+(e.clientY-r.top)/r.height*vb.h)});
-window.addEventListener("resize",applyVB);
+const layer=L.layerGroup().addTo(lmap);
+document.getElementById("z-all").addEventListener("click",()=>fitVisible());
+function fitVisible(){const ids=[...document.querySelectorAll(".card")].map(c=>+c.id.slice(1));const pts=ids.map(i=>MK[i].getLatLng());pts.push(L.latLng(ICC.lat,ICC.lon));lmap.fitBounds(L.latLngBounds(pts),{padding:[24,24],maxZoom:15})}
+/* o mapa fica fixo ao lado da lista; recalcula o tamanho quando a janela muda */
+window.addEventListener("resize",()=>lmap.invalidateSize());
 
 /* ---------- lista ---------- */
 const hav=(a,b)=>{const R0=6371,toR=x=>x*Math.PI/180,dl=toR(b.lat-a.lat),dn=toR(b.lon-a.lon);const h=Math.sin(dl/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dn/2)**2;return 2*R0*Math.asin(Math.sqrt(h))};
-P.forEach(p=>{p.km=hav(ICC,p);p.brlTotal=p.total?brl(p.total,p.cur):null;p.trBrl=p.k==="ride"?brl(p.g===4?TRANSPORT4:TRANSPORT):0;
+P.forEach(p=>{p.km=hav(ICC,p);p.brlTotal=p.total?brl(p.total,p.cur):null;p.trBrl=p.k==="ride"?brl(TRANSPORT4):0;
   const m=/([\d.]+)\/(\d+)/.exec(p.rate||"");p.score=m?(+m[1])/(+m[2])*10:0});
+const plural=(n,a,b)=>n+" "+(n===1?a:b);
+const rb=p=>(p.rooms===1&&p.bx==="estúdio"?"estúdio":plural(p.rooms,"quarto","quartos"))+" · "+(p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas"))+(p.bx&&p.bx!=="estúdio"?" "+p.bx:"")+" · "+bath(p);
+const bath=p=>p.baths==="c"?"banheiro compartilhado":p.baths==null?"banheiros a confirmar":(()=>{const n=Math.floor(p.baths),h=p.baths%1;return plural(n,"banheiro","banheiros")+(h?" + lavabo":"")})();
+const cancK=p=>{const c=(p.canc||"").toLowerCase();
+  if(!c||c.startsWith("não informado"))return "unk";
+  if(c.startsWith("não reembolsável"))return /reembolso total até/.test(c)?"flex":"no";
+  if(/grátis|reembolso total|reembolsável até/.test(c))return /só nas primeiras|24 h após/.test(c)?"part":"yes";
+  return "part"};
+const CANC={flex:["Não reembolsável (há tarifa flexível, mais cara)","cpart"],yes:["Cancelamento grátis","cyes"],part:["Cancelamento com condições","cpart"],no:["Não reembolsável","cno"],unk:["Cancelamento: a confirmar","cunk"]};
+const cancTag=p=>{let [t,c]=CANC[cancK(p)];const d=/até (\d{2}\/\d{2})/.exec(p.canc||"");if(c==="cyes"&&d)t="Grátis até "+d[1];if(cancK(p)==="part"&&/24 h após/.test(p.canc))t="Grátis só 24 h após reservar";return `<span class="ctag ${c}" title="${(p.canc||"").replace(/"/g,"&quot;")}">${t}</span>`};
 const km=p=>p.km.toFixed(1).replace(".",",")+" km do ICC";
-const pp=p=>p.g===4&&p.total?Math.round((p.brlTotal+p.trBrl)/4):null;
+const pp=p=>p.total?Math.round((p.brlTotal+p.trBrl)/2):null;
+P.forEach(p=>{p.serve=!!p.ok&&!p.one});
+P.forEach(makeMarker);
 
 function card(p){
   const d=document.createElement("article");
-  d.className="card"+(p.k==="out"?" unavail":"");d.id="c"+p.id;
-  const kTag=p.k==="walk"?'<span class="tag walk">A pé</span>':p.k==="ride"?'<span class="tag ride">Transporte</span>':'<span class="tag out">Esgotado em dez</span>';
-  const ownTag=p.g===4?(p.own?'<span class="tag own">Cama para cada um</span>':'<span class="tag pax2">Alguém divide cama</span>'):"";
+  d.className="card";d.id="c"+p.id;
+  const kTag=p.k==="walk"?'<span class="tag walk">A pé</span>':'<span class="tag ride">Transporte</span>';
+  const okTag=!p.ok?'<span class="tag pax2">Só 1 cama</span>':'<span class="tag own">Tem 2 camas</span>';
   const per=pp(p);
-  d.innerHTML=`<span class="num ${p.k}">${p.id}</span>
+  d.innerHTML=`<span class="num ${p.k}${p.serve?" ok":""}">${p.id}</span>
    <div class="main">
      <div class="name">${p.name}</div>
-     <div class="meta">${p.area} · ${km(p)}</div>
-     <div class="meta">${p.type}</div>
-     <div class="meta">${p.go}${p.extra?" · "+p.extra:""}</div>
-     <div class="tags">${p.fav?'<span class="tag fav">★ Favorito</span>':""}${ownTag}${p.check?'<span class="tag fav">conferir</span>':""}${kTag}<span class="tag src">${p.src}</span></div>
+     <div class="rb"><span>🚪 ${plural(p.rooms,"quarto","quartos")}${p.bx==="estúdio"?" (estúdio)":""}</span><span>🛏 ${p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas")}${p.bx&&p.bx!=="estúdio"?" "+p.bx:""}</span><span>🚿 ${bath(p)}</span></div>
+     <div class="meta">${p.area} · ${km(p)} em linha reta</div>
+     <dl class="facts2">
+       <dt class="cdt">Cancelamento</dt><dd class="cdd">${p.canc}</dd>
+       <dt>Camas</dt><dd>${p.type}</dd>
+       <dt>Trajeto até o ICC</dt><dd>${p.go}</dd>
+       ${p.note?`<dt>Atenção</dt><dd>${p.note}</dd>`:""}
+     </dl>
+     <div class="tags">${okTag}${kTag}<span class="tag src">${p.src}</span></div>
    </div>
    <div class="price">
-     ${per?`<span class="pp">${R(per)}</span><span class="n">por pessoa${p.trBrl?", com transporte":""}</span>`:""}
-     <span class="${per?"tt":"t"}">${p.total?fmt(p)+(per?" no total":""):"—"}</span>
-     ${p.total?`<span class="n">${fmtOrig(p)} · 13 noites</span>`:'<span class="n">indisponível</span>'}
+     ${cancTag(p)}
+     <span class="pp">${R(per)}</span><span class="n">por pessoa${p.trBrl?", com transporte":""}</span>
+     <span class="tt">${fmt(p)} no total</span>
+     <span class="n">${fmtOrig(p)} · 13 noites</span>
      <span class="r">★ ${p.rate}</span>
    </div>
-   <div class="links"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Ver no mapa</a></div>`;
+   <div class="links"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Google Maps</a></div>`;
   d.addEventListener("click",e=>{if(e.target.closest("a"))return;select(p.id,false)});
+  d.addEventListener("mouseenter",()=>hl(p.id,true));d.addEventListener("mouseleave",()=>hl(p.id,false));
   return d;
 }
-
-function select(id,scroll){
+function hl(id,on){const el=MK[id]&&MK[id].getElement();if(el)el.firstElementChild.classList.toggle("hot",on)}
+function select(id,fromMap){
   document.querySelectorAll(".card.on").forEach(c=>c.classList.remove("on"));
-  document.querySelectorAll(".mk .mkc").forEach(c=>c.setAttribute("r","11"));
+  document.querySelectorAll(".lmk.sel").forEach(c=>c.classList.remove("sel"));
   const c=document.getElementById("c"+id);
-  if(c){c.classList.add("on");if(scroll&&!c.hidden)c.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})}
-  const o=window.__pos.find(o=>o.p.id===id);
-  if(o){o.el.querySelector(".mkc").setAttribute("r","14");
-    if(vb.w<VB0.w-1){vb.x=o.x-vb.w/2;vb.y=o.y-vb.h/2;clampVB();applyVB()}}
+  if(c){c.classList.add("on");if(fromMap)c.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"})}
+  const m=MK[id];if(m){m.getElement()?.firstElementChild.classList.add("sel");m.setZIndexOffset(900);if(!fromMap)lmap.panTo(m.getLatLng());m.openTooltip()}
 }
 
-const state={f:"all",sort:"price"};
-const SHOW={all:()=>true,walk:p=>p.k==="walk",ride:p=>p.k==="ride",fav:p=>p.fav};
-const SORT={price:(a,b)=>((a.brlTotal??1e9)+a.trBrl)-((b.brlTotal??1e9)+b.trBrl),dist:(a,b)=>a.km-b.km,rate:(a,b)=>b.score-a.score};
+const state={f:"ok",sort:"price"};
+const SHOW={all:()=>true,ok:p=>p.serve,free:p=>p.serve&&cancK(p)==="yes",walk:p=>p.serve&&p.k==="walk",ride:p=>p.serve&&p.k==="ride"};
+const SORT={price:(a,b)=>(a.brlTotal+a.trBrl)-(b.brlTotal+b.trBrl),dist:(a,b)=>a.km-b.km,rate:(a,b)=>b.score-a.score};
 function render(){
   document.querySelectorAll(".filters button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===state.f?"true":"false"));
-  const show=SHOW[state.f]||SHOW.all;
+  const show=SHOW[state.f]||SHOW.ok;
   const list=document.getElementById("list");list.innerHTML="";
   const items=P.filter(show).sort(SORT[state.sort]);
   items.forEach(p=>list.appendChild(card(p)));
   document.getElementById("count").textContent=`${items.length} ${items.length===1?"opção":"opções"}`;
-  for(const p of P){const m=document.querySelector(`.mk[data-id="${p.id}"]`);if(m)m.style.display=show(p)?"":"none"}
+  layer.clearLayers();items.forEach(p=>layer.addLayer(MK[p.id]));
   try{localStorage.setItem("hs2-state",JSON.stringify(state))}catch(e){}
 }
 
-function costRows(rows,per){
+function costTable4(){
+  const rows=P.filter(p=>p.serve).map(p=>({p,d:p.brlTotal,t:p.trBrl,sum:p.brlTotal+p.trBrl})).sort((a,b)=>a.sum-b.sum);
   const max=Math.max(...rows.map(r=>r.sum));
-  return rows.map(r=>`<tr>
-    <td><b>${r.p.id}.</b> ${r.p.name}${r.p.fav?" ★":""}${r.p.check?' <span class="tag fav">conferir</span>':""}${per&&r.p.own?' <span class="tag own">cama p/ cada</span>':""}${links(r.p)}<div class="bar ${r.p.k}" style="width:${(r.sum/max*100).toFixed(1)}%"></div></td>
+  document.querySelector("#costtable4 tbody").innerHTML=rows.map(r=>`<tr>
+    <td><b>${r.p.id}.</b> ${r.p.name} <span class="rbs">${rb(r.p)}</span> ${cancTag(r.p)}${links(r.p)}<div class="bar ${r.p.k}" style="width:${(r.sum/max*100).toFixed(1)}%"></div></td>
     <td class="r mono">R$ ${r.d.toLocaleString("pt-BR")}</td>
     <td class="r mono">${r.t?"+ R$ "+r.t.toLocaleString("pt-BR"):"R$ 0"}</td>
-    <td class="r mono"><b>R$ ${r.sum.toLocaleString("pt-BR")}</b></td>${per?`
-    <td class="r mono"><b>R$ ${Math.round(r.sum/4).toLocaleString("pt-BR")}</b></td>`:""}</tr>`).join("");
-}
-function costTable(){
-  const rows=P.filter(p=>p.total&&p.g!==4).map(p=>({p,d:p.brlTotal,t:p.trBrl,sum:p.brlTotal+p.trBrl})).sort((a,b)=>a.sum-b.sum);
-  document.querySelector("#costtable tbody").innerHTML=costRows(rows,false);
-}
-function costTable4(){
-  const rows=P.filter(p=>p.g===4&&p.total).map(p=>({p,d:p.brlTotal,t:p.trBrl,sum:p.brlTotal+p.trBrl})).sort((a,b)=>a.sum-b.sum);
-  document.querySelector("#costtable4 tbody").innerHTML=costRows(rows,true);
+    <td class="r mono"><b>R$ ${r.sum.toLocaleString("pt-BR")}</b></td>
+    <td class="r mono"><b>R$ ${Math.round(r.sum/2).toLocaleString("pt-BR")}</b></td></tr>`).join("");
 }
 
-/* destaques para 4 */
+/* destaques */
 const PICKS=[
- {id:18,cls:"p1",k:"Minha escolha · apartamento com cama para cada um",why:"Casa de 3 quartos (queen, 2 de solteiro, queen) em Darlington, ~30 min a pé do ICC ou ônibus curto. Nota 4.52 com 66 avaliações no Airbnb: o melhor preço por pessoa entre os apartamentos com 4 camas de verdade.",alt:34,altTxt:"Alternativa com nota melhor"},
- {id:17,cls:"p2",k:"Mais perto com 4 camas",why:"3 quartos e 4 camas a ~15 min a pé do ICC. Nota 4.4 com só 12 avaliações; reserva pelo site direto (Hostaway).",alt:16,altTxt:"Ainda mais perto (0,8 km), mas com 3 camas"},
- {id:42,cls:"p3",k:"Mais barato",why:"As 4 camas de um dormitório de 4 viram o quarto de vocês, com banheiro compartilhado, a ~17 min a pé. Nota 8.8 com 2.365 avaliações. Peça ao hostel para ficarem no mesmo quarto.",alt:44,altTxt:"Mais perto do ICC (0,9 km)"},
- {id:15,cls:"p4",k:"O que você mandou, com cupom",why:"Com o cupom do Hoteis.com, empata com a casa em Darlington (R$ 4.814 contra R$ 4.851 por pessoa, já com o trem). Ganha em nota (9.0 com 104 avaliações, prédio novo, 2 banheiros), mas tem 3 camas para 4 e exige trem todo dia (~25–30 min). Vale se dois de vocês dividirem a queen."}
+ {id:7,cls:"p1",k:"Minha escolha",why:"Hotel de nota 8.8 (1.000 avaliações), com king + 1 solteira (2 camas) e banheiro. Cancelamento grátis até 02/12. Com o cupom HOTEISMD10OFF, que vale só até hoje, o Hoteis.com cobra R$ 20.310 (sem cupom, R$ 22.341). Fica a 30–35 min a pé do ICC.",alt:8,altTxt:"Alternativa com 2 solteiras sob pedido (grátis até 26/11)"},
+ {id:1,cls:"p2",k:"Mais barato que serve",why:"Apartamento com 2 camas e banheiro privativo por menos da metade do preço do próximo com banheiro privativo (R$ 13.184). Sem avaliações (novo): o risco é maior. O Hostelworld mostra 'Free Cancellation' sem data e não diz se o preço é por noite: confirme antes de pagar."},
+ {id:6,cls:"p3",k:"Apartamento barato",why:"Quarto com 1 casal + 2 solteiro, sacada e banheiro, a 20–25 min a pé. É não reembolsável e tem nota 7.0–7.3. Com o cupom de hoje, R$ 13.184 no Hoteis.com (no Booking, A$ 4.129)."},
+ {id:13,cls:"p4",k:"A pé, 2 banheiros",why:"2 quartos com 1 queen cada e 2 banheiros, em Haymarket, a 10–15 min a pé do ICC. Nota 4.94 com 16 avaliações. O Airbnb só dá cancelamento grátis nas primeiras 24 h.",alt:12,altTxt:"Mais barato com transporte (ônibus pela Parramatta Rd)"}
 ];
+
+/* meu ranking */
+const RANK=[
+ {id:1,why:"O mais barato com 2 camas e banheiro privativo: cerca de R$ 5.800 pelos dois, a 25–30 min a pé. Sem avaliações e com o preço por noite a confirmar. Se o checkout confirmar o cancelamento grátis, é a melhor compra."},
+ {id:7,why:"Hotel de nota 8.8 com 2 camas (king + solteira) e cancelamento grátis até 02/12. Com o HOTEISMD10OFF, R$ 20.310; o cupom só vale até hoje (11/11), e depois volta a R$ 22.341. Ainda dá para reservar sem cupom e cancelar de graça até 02/12.",alt:8},
+ {id:6,why:"Apartamento de 1 quarto com 3 camas e banheiro, perto do centro. R$ 13.184 com o cupom de hoje. Não reembolsável e nota 7.0–7.3: só vale se o preço for o que mais pesa."},
+ {id:13,why:"Os 2 quartos com queen e 2 banheiros mais bem avaliados (4.94) e mais perto do ICC (10–15 min a pé). Mais caro que o Hyde Park, mas dá um banheiro para cada um. Grátis só 24 h."},
+ {id:2,why:"Twin privado em beliche, a 10 min a pé, com banheiro compartilhado. Preço de 04/11 (A$ 1.643): reconfira antes de contar com ele."}
+];
+function ranking(){
+  document.getElementById("ranklist").innerHTML=RANK.map((r,i)=>{const p=P.find(x=>x.id===r.id);const a=r.alt&&P.find(x=>x.id===r.alt);
+    return `<li class="rk">
+      <span class="rkn">${i+1}</span>
+      <div class="rkb">
+        <div class="rkh"><b>${p.name}</b> <span class="rbs">${rb(p)}</span> ${cancTag(p)}</div>
+        <p>${r.why}</p>
+        <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="#lista" data-go="${p.id}">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">Ver no ${siteName(a)}</a>`:""}</div>
+      </div>
+      <div class="rkp"><span class="big mono">${R(pp(p))}</span><small>por pessoa</small><small class="mono">${R(p.brlTotal+p.trBrl)} no total</small></div>
+    </li>`}).join("");
+}
 function picks(){
-  const box=document.getElementById("verdict4");
-  box.innerHTML=PICKS.map(k=>{const p=P.find(x=>x.id===k.id);const a=k.alt&&P.find(x=>x.id===k.alt);
+  document.getElementById("verdict4").innerHTML=PICKS.map(k=>{const p=P.find(x=>x.id===k.id);const a=k.alt&&P.find(x=>x.id===k.alt);
     return `<article class="pick ${k.cls}">
       <span class="k">${k.k}</span>
       <h3>${p.name}</h3>
+      <span class="rbs">${rb(p)}</span> ${cancTag(p)}
       <div class="money"><div><span class="lbl">Por pessoa</span><span class="big mono">${R(pp(p))}</span></div>
-        <div><span class="lbl">Total para 4</span><span class="mid mono">${R(p.brlTotal+p.trBrl)}</span><small>${fmtOrig(p)}${p.trBrl?" + transporte":""}</small></div></div>
+        <div><span class="lbl">Total para 2</span><span class="mid mono">${R(p.brlTotal+p.trBrl)}</span><small>${fmtOrig(p)}${p.trBrl?" + transporte":""}</small></div></div>
       <p>${k.why}</p>
-      ${a?`<p class="altp">${k.altTxt}: <b>${a.name}</b>, ${R(pp(a))} por pessoa (${R(a.brlTotal)} no total).</p>`:""}
-      <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">${a.name.split(",")[0]} no ${siteName(a)}</a>`:""}</div>
+      <p class="cline"><b>Cancelamento:</b> ${p.canc}</p>
+      ${a?`<p class="altp">${k.altTxt}: <b>${a.name}</b>, ${R(pp(a))} por pessoa.</p>`:""}
+      <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="#lista" data-go="${p.id}">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">${a.name.split(",")[0]} no ${siteName(a)}</a>`:""}</div>
     </article>`}).join("");
+  document.querySelectorAll("[data-go]").forEach(x=>x.addEventListener("click",e=>{const id=+x.dataset.go;state.f="all";render();setTimeout(()=>select(id,true),350)}));
 }
 
-drawMap();
-applyVB();
 try{Object.assign(state,JSON.parse(localStorage.getItem("hs2-state")||"{}"))}catch(e){}
-if(!SHOW[state.f])state.f="all"; if(!SORT[state.sort])state.sort="price";
+if(!SHOW[state.f])state.f="ok"; if(!SORT[state.sort])state.sort="price";
 document.getElementById("sort").value=state.sort;
-render();
-costTable();
-document.querySelectorAll(".pick[data-id]").forEach(a=>{const p=P.find(x=>x.id===+a.dataset.id);
-  const d=document.createElement("div");d.className="plinks";
-  d.innerHTML=`<a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Ver no mapa</a>`;
-  a.appendChild(d)});
-document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{state.f=b.dataset.f;render()}));
+render();fitVisible();
+/* o viewer ajusta o tamanho do quadro depois do carregamento: reenquadra quando ele estabiliza */
+setTimeout(()=>{lmap.invalidateSize();fitVisible()},400);
+costTable4();
+ranking();
+picks();
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{state.f=b.dataset.f;render();fitVisible()}));
 document.getElementById("sort").addEventListener("change",e=>{state.sort=e.target.value;render()});
 </script>
