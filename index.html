@@ -1,0 +1,526 @@
+<title>Hospedagem Sydney NeurIPS · 4 pessoas</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: guia de viagem em uma coluna larga — veredito no topo, mapa esquemático + lista lado a lado, custos embaixo */
+:root{
+  --bg:#f4f4fb; --surface:#ffffff; --fg:#1a1838; --muted:#615f82; --line:#dcdaf0;
+  --accent:#4b3fd1; --accent-soft:#e6e3fb; --water:#d6dcf6; --land:#f7f7fc; --park:#e9e7f7; --road:#d3d0ea; --road-major:#bdb9e0; --rail:#9d99c4;
+  --fav:#c2417f; --fav-soft:#fbe3ef;
+  --walk:#2563c9; --walk-soft:#e0eafb; --ride:#7c3fc9; --ride-soft:#efe4fb; --bad:#b4442f; --bad-soft:#f8e2dd;
+  --ring:#4b3fd1;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12112a; --surface:#1b1a3a; --fg:#ebe9fb; --muted:#a3a0c8; --line:#2f2d55;
+  --accent:#9b8ffc; --accent-soft:#2a2660; --water:#232a5e; --land:#1f1e42; --park:#262650; --road:#34336a; --road-major:#4a4886; --rail:#7a77ad;
+  --fav:#f07bb4; --fav-soft:#45203a;
+  --walk:#6ea2f5; --walk-soft:#1b2a55; --ride:#b98cf5; --ride-soft:#33225a; --bad:#e58771; --bad-soft:#3d211b;
+  --ring:#9b8ffc; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#12112a; --surface:#1b1a3a; --fg:#ebe9fb; --muted:#a3a0c8; --line:#2f2d55;
+  --accent:#9b8ffc; --accent-soft:#2a2660; --water:#232a5e; --land:#1f1e42; --park:#262650; --road:#34336a; --road-major:#4a4886; --rail:#7a77ad;
+  --fav:#f07bb4; --fav-soft:#45203a;
+  --walk:#6ea2f5; --walk-soft:#1b2a55; --ride:#b98cf5; --ride-soft:#33225a; --bad:#e58771; --bad-soft:#3d211b;
+  --ring:#9b8ffc; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:36px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.9rem,4.2vw,2.9rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.45rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,.mk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font:600 .75rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* header */
+header{display:grid;gap:14px}
+.lede{max-width:68ch;color:var(--muted);font-size:1.05rem}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.88rem}
+.fact b{font-weight:700}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.pick{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:8px;align-content:start}
+.pick .k{font:600 .72rem/1 var(--f-mono);letter-spacing:.07em;text-transform:uppercase}
+.pick.p1 .k{color:var(--ride)} .pick.p2 .k{color:var(--fav)} .pick.p3 .k{color:var(--walk)} .pick.p4 .k{color:var(--accent)}
+.pick .big{font:700 1.6rem/1.1 var(--f-display)}
+.pick .big small{font:400 .9rem var(--f-body);color:var(--muted)}
+.pick p{font-size:.95rem;color:var(--muted)}
+.answer{background:var(--accent-soft);border-radius:12px;padding:18px 20px;display:grid;gap:6px}
+.answer p{max-width:80ch}
+
+/* map + list */
+.explore{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.explore{grid-template-columns:1fr}}
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:900px){.mapbox{position:static}}
+.mapframe{position:relative;border-radius:8px;overflow:hidden;background:var(--land);border:1px solid var(--line)}
+.mapframe svg{width:100%;height:auto;display:block;max-width:100%;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.mapctl{position:absolute;top:8px;right:8px;display:grid;gap:4px;z-index:2}
+.mapctl button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 1rem var(--f-mono);cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.mapctl button:hover{border-color:var(--accent)}
+.scale{position:absolute;left:10px;bottom:8px;font:600 .7rem var(--f-mono);color:var(--muted);display:grid;gap:2px;z-index:2;pointer-events:none}
+.scale i{display:block;height:4px;border:1.5px solid var(--muted);border-top:none;width:var(--w,46px)}
+.tip{position:absolute;z-index:3;pointer-events:none;background:var(--fg);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:.8rem;line-height:1.35;max-width:220px;transform:translate(-50%,calc(-100% - 10px));box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.tip b{display:block;font-size:.86rem}
+.tip::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:var(--fg);transform:translateX(-50%) rotate(45deg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);padding:10px 4px 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.maphint{font-size:.78rem;color:var(--muted);padding:6px 4px 0}
+.mk{cursor:pointer}
+.mk .mkc{transition:r .12s}
+@media (prefers-reduced-motion:reduce){.mk .mkc{transition:none}}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.filters button{font:600 .85rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 13px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.list{display:grid;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 14px 12px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:4px 12px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
+.card:hover,.card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .8rem var(--f-mono);color:#fff;margin-top:2px}
+.num.walk{background:var(--walk)} .num.ride{background:var(--ride)} .num.out{background:var(--bad)}
+.card .main{min-width:0;display:grid;gap:3px}
+.card .name{font-weight:700;font-size:1.02rem;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.card .meta{font-size:.88rem;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.tag{font:600 .72rem/1 var(--f-body);padding:4px 7px;border-radius:5px}
+.tag.walk{background:var(--walk-soft);color:var(--walk)} .tag.ride{background:var(--ride-soft);color:var(--ride)}
+.tag.fav{background:var(--fav-soft);color:var(--fav)} .tag.out{background:var(--bad-soft);color:var(--bad)}
+.tag.src{background:var(--accent-soft);color:var(--accent)}
+.price{text-align:right;display:grid;gap:2px;align-content:start}
+.price .t{font:600 1.05rem var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.price .n{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.price .r{font-size:.78rem;color:var(--fg);white-space:nowrap}
+.card .links{grid-column:2 / -1;font-size:.86rem;display:flex;gap:14px;flex-wrap:wrap}
+.card.unavail{opacity:.85}
+.plinks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem}
+.plinks a,.tlinks a{white-space:nowrap}
+.tlinks{font-size:.8rem;display:flex;gap:10px;margin-top:2px}
+.tag.pax4{background:var(--walk);color:#fff} .tag.pax2{background:var(--line);color:var(--muted)}
+.status{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.status li{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:.88rem;display:grid;gap:2px}
+.status li b{font-size:.92rem}
+.st{font:600 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase}
+.st.ok{color:var(--walk)} .st.run{color:var(--accent)} .st.blk{color:var(--bad)}
+.section-h{display:grid;gap:6px}
+.card.unavail .t{text-decoration:line-through;color:var(--muted)}
+
+/* cost table */
+.costs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:22px}
+@media (max-width:900px){.costs{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:12px;align-content:start;min-width:0}
+.panel ul{margin:0;padding-left:1.1em;display:grid;gap:6px}
+.rule{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font:600 .72rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+td .bar{height:6px;border-radius:3px;background:var(--accent);margin-top:4px}
+td .bar.ride{background:var(--ride)} td .bar.walk{background:var(--walk)}
+.note{font-size:.85rem;color:var(--muted);max-width:90ch}
+footer{display:grid;gap:8px;font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:18px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+:root{--own:#1f9e6e} @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--own:#4fd1a0}} :root[data-theme="dark"]{--own:#4fd1a0}
+.tag.own{background:color-mix(in srgb,var(--own) 16%,transparent);color:var(--own)}
+.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.toc a{text-decoration:none;border-bottom:1px solid currentColor}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.toolbar .filters{margin:0}
+.sort{font-size:.85rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.sort select{font:600 .85rem var(--f-body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.count{font-size:.8rem;color:var(--muted);margin:0 0 8px}
+.money{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:end}
+.money>div{display:grid;gap:2px}
+.money .lbl{font:600 .68rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.money .mid{font:700 1.05rem/1.1 var(--f-mono)}
+.money small{font-size:.78rem;color:var(--muted)}
+.pick .altp{font-size:.88rem;color:var(--fg)}
+.price .pp{font:700 1.15rem var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.price .tt{font:600 .85rem var(--f-mono);white-space:nowrap;margin-top:4px}
+.status{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.status li{align-content:start}
+details.ref{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0}
+details.ref>summary{cursor:pointer;padding:18px;display:grid;gap:4px;list-style:none}
+details.ref>summary::-webkit-details-marker{display:none}
+details.ref>summary b{font:700 1.3rem var(--f-display)}
+details.ref>summary::after{content:"Mostrar ▾";font-size:.85rem;color:var(--accent)}
+details.ref[open]>summary::after{content:"Esconder ▴"}
+.refbody{display:grid;gap:24px;padding:0 18px 18px}
+html{scroll-behavior:smooth} @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+section[id],div[id]{scroll-margin-top:16px}
+td.r,th.r{white-space:nowrap}
+.tag{white-space:nowrap}
+#custos{grid-template-columns:minmax(0,.75fr) minmax(0,2fr)}
+@media (max-width:900px){#custos{grid-template-columns:1fr}}
+
+/* mapa real fixo ao lado da lista */
+.explore{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.mapbox{position:sticky;top:12px;align-self:start;padding:10px}
+#lmap{height:calc(100vh - 110px);min-height:420px;border-radius:8px;border:1px solid var(--line);z-index:0;background:var(--land)}
+@media (max-width:900px){
+  .explore{grid-template-columns:1fr}
+  .mapbox{position:sticky;top:0;z-index:5;border-radius:0 0 12px 12px;margin-inline:-16px;box-shadow:0 6px 14px rgba(0,0,0,.12)}
+  #lmap{height:42vh;min-height:260px}
+  .mapbox .legend{display:none}
+}
+.ringdot{background:transparent!important;border:2.5px solid var(--own)}
+.mini{font:600 .78rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 10px;cursor:pointer;margin-left:auto}
+.lmk{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font:700 .74rem var(--f-mono);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:transform .12s}
+.lmk.walk{background:var(--walk)} .lmk.ride{background:var(--ride)}
+.lmk.ok{box-shadow:0 0 0 3px var(--own),0 1px 4px rgba(0,0,0,.35)}
+.lmk.hot,.lmk.sel{transform:scale(1.35);z-index:1000}
+.lmk.sel{background:var(--fav)}
+.iccmk{display:grid!important;place-items:center;border-radius:50%;background:var(--accent);color:#fff;font:700 .72rem var(--f-mono);border:3px solid #fff;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 25%,transparent)}
+.ringlab{color:var(--ring);font:600 .7rem var(--f-mono);text-align:center;white-space:nowrap;text-shadow:0 0 3px #fff}
+.num.ok{box-shadow:0 0 0 2.5px var(--own)}
+@media (prefers-color-scheme: dark){.leaflet-tile-pane{filter:brightness(.78) contrast(1.05) saturate(.85)}}
+.leaflet-tooltip{font:400 .8rem/1.35 var(--f-body)}
+.card.on{background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+@media (prefers-reduced-motion:reduce){.lmk{transition:none}}
+@media (max-width:560px){
+  .card{grid-template-columns:30px minmax(0,1fr)}
+  .card .price{grid-column:2;text-align:left;grid-template-columns:auto 1fr;align-items:baseline;gap:2px 8px}
+  .card .price .n,.card .price .r{grid-column:auto}
+  .card .links{grid-column:2}
+  .money{grid-template-columns:1fr 1fr}
+}
+
+.rb{display:flex;flex-wrap:wrap;gap:4px 14px;font:600 .9rem var(--f-body);color:var(--fg)}
+.rbs{font-size:.82rem;color:var(--muted);font-weight:600}
+.facts2{display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;margin:6px 0 2px;font-size:.86rem}
+.facts2 dt{font:600 .7rem/1.6 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.facts2 dd{margin:0;color:var(--fg)}
+@media (max-width:560px){.facts2{grid-template-columns:1fr}.facts2 dt{margin-top:4px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">NeurIPS 2026 · ICC Sydney · 4 pessoas · atualizado em 10/11/2026</span>
+    <h1>Onde ficar em Sydney de 3 a 16 de dezembro</h1>
+    <p class="lede">Hospedagem para <b>4 pessoas: um casal e dois solteiros</b>. O requisito é ter <b>pelo menos 3 camas</b> (o casal divide uma). Os valores são o total das 13 noites com taxas, em reais, com o valor original ao lado; "por pessoa" inclui o transporte quando o lugar não fica a pé do ICC. Preços mudam rápido: confira antes de reservar.</p>
+    <div class="facts">
+      <span class="fact"><b>13 noites</b> · 3 → 16/dez</span>
+      <span class="fact"><b>4 pessoas</b> · casal + 2 solteiros · 3+ camas</span>
+      <span class="fact"><b>Conferência</b> · 6 → 12/dez</span>
+      <span class="fact"><b>Câmbio</b> · A$ 1 = R$ 3,81 · € 1 = R$ 6,18</span>
+    </div>
+    <nav class="toc" aria-label="Nesta página">
+      <a href="#resumo">Resumo</a><a href="#lista">Mapa e lista</a><a href="#custos">Custo por pessoa</a><a href="#booking">Booking (sem preço)</a><a href="#status">Sites pesquisados</a><a href="2-pessoas.html">Pesquisa para 2 pessoas →</a>
+    </nav>
+  </header>
+
+  <section class="section-h" id="resumo" aria-label="Resumo">
+    <span class="eyebrow">Resumo · 4 pessoas</span>
+    <h2>O que eu escolheria</h2>
+    <p class="note">Só entram lugares com 3 camas ou mais. Por pessoa já inclui o transporte (≈ R$ 181 por pessoa) quando o lugar não fica a pé do ICC.</p>
+  </section>
+  <section class="verdict" id="verdict4" aria-label="Destaques para 4 pessoas"></section>
+
+  <div class="answer">
+    <h3>Ficar num lugar só ou dividir?</h3>
+    <p><b>Num lugar só.</b> A busca de hostels testou dividir em 3–6/dez (qualquer lugar), 6–12/dez (até 2,5 km do ICC) e 12–16/dez (qualquer lugar): a economia foi de só € 30–65 para o grupo inteiro, com duas mudanças de hostel. Dividir o <i>grupo</i> em dois quartos funciona bem para casal + 2 solteiros (um quarto para cada dupla), mas nos hostels sai mais caro que o dormitório de 4 inteiro, e o casal acaba em camas de solteiro.</p>
+  </div>
+
+  <section class="explore" aria-label="Mapa e opções" id="lista">
+    <div class="mapbox" id="mapbox">
+      <div id="lmap" role="region" aria-label="Mapa de Sydney com o ICC e as hospedagens"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--walk)"></i>A pé do ICC</span>
+        <span><i class="dot" style="background:var(--ride)"></i>Com transporte</span>
+        <span><i class="dot ringdot"></i>3+ camas (serve para o grupo)</span>
+        <span><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="var(--ring)" stroke-dasharray="2 2"/></svg>15 e 30 min a pé do ICC</span>
+        <button id="z-all" type="button" class="mini">Enquadrar opções</button>
+      </div>
+    </div>
+
+    <div class="listcol">
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filtrar opções">
+          <button data-f="ok" aria-pressed="true">3+ camas</button>
+          <button data-f="walk" aria-pressed="false">3+ camas, a pé</button>
+          <button data-f="ride" aria-pressed="false">3+ camas, transporte</button>
+          <button data-f="all" aria-pressed="false">Todas</button>
+        </div>
+        <label class="sort">Ordenar por
+          <select id="sort">
+            <option value="price">menor preço por pessoa</option>
+            <option value="dist">mais perto do ICC</option>
+            <option value="rate">melhor nota</option>
+          </select>
+        </label>
+      </div>
+      <p class="count" id="count" aria-live="polite"></p>
+      <div class="list" id="list"></div>
+    </div>
+  </section>
+
+  <section class="costs" aria-label="Custo para 4 pessoas" id="custos">
+    <div class="panel">
+      <h2>Transporte para 4</h2>
+      <ul>
+        <li>Opal 2026: trem ou metro até 10 km custa <b>A$ 4,33 no pico</b> (seg–qui, 6h30–10h e 15h–19h) e A$ 3,03 fora dele.</li>
+        <li>Teto diário de A$ 19,30 (seg–qui) e A$ 9,65 (sex–dom), e <b>teto semanal de A$ 50 por pessoa</b>.</li>
+        <li>Ida e volta de 6 a 12/dez dá ~A$ 47 por pessoa. Para 4 pessoas, <b>~A$ 190 (≈ R$ 723)</b>.</li>
+      </ul>
+      <p class="rule">Para 4 pessoas, um lugar com transporte só compensa se sair ~R$ 950 (A$ 250) mais barato que um equivalente a pé do ICC.</p>
+      <p class="note">Fontes: <a href="https://www.transport.nsw.gov.au/system/files/media/documents/2026/public-transport-fares-and-ticketing-brochure.pdf">folheto de tarifas TfNSW 2026</a> e regras de pico (TfNSW Open Data). Confira no app Opal.</p>
+    </div>
+    <div class="panel">
+      <h2>Custo real para 4, em 13 noites</h2>
+      <div class="tablewrap"><table id="costtable4">
+        <thead><tr><th>Lugar</th><th class="r">Diárias</th><th class="r">Transporte</th><th class="r">Total</th><th class="r">Por pessoa</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="note">Só lugares com 3+ camas. Valores em <b>R$</b> (A$ 1 = R$ 3,81 e € 1 = R$ 6,18, câmbio comercial de 10/11/2026; a fatura do cartão terá IOF e spread). Total = diárias + transporte estimado (A$ 190 ≈ R$ 723 para os 4, quando não dá para ir a pé). Ordenado pelo total.</p>
+    </div>
+  </section>
+
+  <section class="costs" aria-label="Booking sem preço" id="booking">
+    <div class="panel" style="grid-column:1/-1">
+      <span class="eyebrow">Booking.com · 4 adultos · sem preço</span>
+      <h2>Apartamentos bem avaliados a até 10 min a pé do ICC</h2>
+      <p class="note">O Booking descarta as datas neste navegador, então não há preço nem configuração das camas. A lista tem nome, nota e distância em linha reta, filtrada por nome com 2 quartos ou mais e nota ≥ 7. Os links já trazem 3–16/dez e 4 adultos: abra no seu navegador para ver o preço.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Lugar</th><th>Área</th><th>Unidade</th><th class="r">Nota (n)</th><th class="r">ICC</th><th>Mapa</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://www.booking.com/hotel/au/goldsbrough-2-bedrooms-split-apartment.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Goldsbrough 2 bedrooms split apartment</a></td><td>Pyrmont</td><td>2 quartos</td><td class="r mono">8.9 (146)</td><td class="r mono">0,10 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Goldsbrough%202%20bedrooms%20split%20apartment%20Pyrmont%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/stylish-inner-city-2-bed-unit-by-fig-lane-park.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Stylish Inner City 2-Bed Unit by Fig Lane Park</a></td><td>Ultimo</td><td>2 quartos</td><td class="r mono">9.1 (11)</td><td class="r mono">0,21 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Stylish%20Inner%20City%202-Bed%20Unit%20by%20Fig%20Lane%20Park%20Ultimo%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/darling-harbour-comfy-apart-near-icc-amp-the-star.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Spacious &amp; Cosy 2 Bedroom Apt in Darling Harbour</a></td><td>Pyrmont</td><td>2 quartos</td><td class="r mono">8.7 (61)</td><td class="r mono">0,24 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Spacious%20%26%20Cosy%202%20Bedroom%20Apt%20in%20Darling%20Harbour%20Pyrmont%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/2-bedroom-apartment-pyrmont-with-balcony.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">2 Bedroom Apartment Pyrmont with Balcony</a></td><td>Pyrmont</td><td>2 quartos</td><td class="r mono">8.3 (81)</td><td class="r mono">0,27 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=2%20Bedroom%20Apartment%20Pyrmont%20with%20Balcony%20Pyrmont%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/2-bedroom-house-darling-harbour-good-for-6-guests.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">2 Bedroom House Darling Harbour Good for 6</a></td><td>Pyrmont</td><td>casa, 2 quartos</td><td class="r mono">8.0 (89)</td><td class="r mono">0,28 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=2%20Bedroom%20House%20Darling%20Harbour%20Good%20for%206%20Pyrmont%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/3-bedroom-darling-harbour-apartment.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">3 Bedroom Darling Harbour Apartment</a></td><td>Darling Harbour</td><td>3 quartos</td><td class="r mono">9.4 (55)</td><td class="r mono">0,41 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=3%20Bedroom%20Darling%20Harbour%20Apartment%20Darling%20Harbour%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/darling-harbour-sydney.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Darling Harbour 2 Bedroom Apartment</a></td><td>Darling Harbour</td><td>2 quartos</td><td class="r mono">9.2 (66)</td><td class="r mono">0,41 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Darling%20Harbour%202%20Bedroom%20Apartment%20Darling%20Harbour%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/ultimo-nsw-2-bedroom-apartment-with-balcony.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Ultimo NSW 2 Bedroom Apt with Balcony</a></td><td>Ultimo</td><td>2 quartos</td><td class="r mono">8.5 (54)</td><td class="r mono">0,48 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Ultimo%20NSW%202%20Bedroom%20Apt%20with%20Balcony%20Ultimo%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/central-ultimo-3br-pool-gym-amp-2-parking-balcony.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Central Ultimo 3BR, Pool, Gym &amp; 2 Parking</a></td><td>Ultimo</td><td>3 quartos</td><td class="r mono">9.4 (16)</td><td class="r mono">0,51 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Central%20Ultimo%203BR%2C%20Pool%2C%20Gym%20%26%202%20Parking%20Ultimo%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/sydney-city-high-level-amazing-2-bedroom-condo-with-pool.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Sydney City High Level 2BR 2 bath Condo with Pool</a></td><td>Haymarket</td><td>2 quartos, 2 banheiros</td><td class="r mono">8.9 (14)</td><td class="r mono">0,62 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Sydney%20City%20High%20Level%202BR%202%20bath%20Condo%20with%20Pool%20Haymarket%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/urban-bliss-abode-luxury-comfort-pool-parking.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Urban Bliss 2BR Abode</a></td><td>Haymarket</td><td>2 quartos</td><td class="r mono">9.7 (15)</td><td class="r mono">0,72 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Urban%20Bliss%202BR%20Abode%20Haymarket%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+          <tr><td><a href="https://www.booking.com/hotel/au/great-value-near-darling-harbour-cbd-icc-casino.html?checkin=2026-12-03&amp;checkout=2026-12-16&amp;group_adults=4&amp;no_rooms=1&amp;group_children=0&amp;selected_currency=BRL" target="_blank" rel="noopener">Darling Escape, Pyrmont 2BR w Parking</a></td><td>Pyrmont</td><td>2 quartos</td><td class="r mono">8.7 (42)</td><td class="r mono">0,73 km</td><td><a href="https://www.google.com/maps/search/?api=1&amp;query=Darling%20Escape%2C%20Pyrmont%202BR%20w%20Parking%20Pyrmont%20Sydney" target="_blank" rel="noopener">Mapa</a></td></tr>
+        </tbody>
+      </table></div>
+      <p class="rule">Prioridade para conferir: Goldsbrough (100 m do ICC), 3 Bedroom Darling Harbour Apartment (9.4) e Central Ultimo 3BR (9.4). Se algum tiver 3+ camas e sair abaixo de ~R$ 19 mil no total (≈ R$ 4.800 por pessoa), ganha do Urban Rest e da casa em Darlington pela localização.</p>
+    </div>
+  </section>
+
+  <section class="section-h" id="status" aria-label="Andamento da pesquisa">
+    <span class="eyebrow">Andamento · coleta de 10/11/2026</span>
+    <h2>Sites pesquisados</h2>
+    <ul class="status" id="status4">
+      <li><span class="st ok">Pronto</span><b>Airbnb</b>12 lugares com 4 vagas para dormir. A maioria dos 2 quartos baratos perto do ICC tem queen + queen + sofá-cama, e ficou de fora.</li>
+      <li><span class="st ok">Pronto</span><b>Hostels (Hostelworld e sites oficiais)</b>Dormitórios de 4 inteiros a partir de € 1.557. YHA Harbour e ibis Styles Central esgotados.</li>
+      <li><span class="st ok">Pronto</span><b>Agoda e Trip.com</b>Nenhum dos dois é sempre o mais barato: compare o mesmo imóvel nos dois.</li>
+      <li><span class="st ok">Pronto</span><b>Google Hotels (inclui preços do Stayz)</b>Aluguéis de 2 e 3 quartos. Stayz e Vrbo bloquearam o acesso direto.</li>
+      <li><span class="st ok">Pronto</span><b>Urban Rest North Sydney</b>Com o seu cupom no Hoteis.com: R$ 18.531,88 para os 4. No site direto: A$ 5.550 (R$ 21.122). O de 3 quartos está esgotado.</li>
+      <li><span class="st blk">Sem preço</span><b>Booking.com</b>Descarta as datas no navegador automatizado. Lista para conferir no seu navegador logo acima.</li>
+      <li><span class="st blk">Bloqueado</span><b>Hotels.com / Hoteis.com / Expedia</b>Todo o grupo Expedia recusa acesso automatizado (erro HTTP/2, 429 e captcha). Só dá para ver no seu Chrome.</li>
+      <li><span class="st ok">Pronto</span><b>Decolar</b>Preços em R$ (sem IOF), com Pix, 2 cartões e filtro de parcelamento; o número de parcelas só aparece no checkout. Para 4, só hotéis: o mais barato com 4 camas é o 790 on George (2 twins, R$ 18.088). Apartamentos e hostels saem bem mais baratos fora dela.</li>
+    </ul>
+  </section>
+
+  
+
+  <footer>
+    <p><b>4 pessoas (coleta de 10/11/2026):</b> Urban Rest pelo site direto (A$, com taxas); Agoda (preços da página do quarto em US$, convertidos pela taxa da própria Agoda, US$ 1 = A$ 1,4582); Trip.com (cards com taxas; até 10 resultados por busca, então a cobertura é parcial); Google Hotels (inclui os preços do Stayz; notas de 0 a 5); Airbnb (preço total do anúncio, com taxas, sem passar pelo checkout; posição borrada em ~150 m); Hostelworld (em €; pode haver taxa de reserva no checkout); Booking só sem datas. Decolar (páginas de resultado e do hotel, em R$ com taxas; a página de pagamento ficou bloqueada por captcha). Stayz, Vrbo, Expedia, Hotels.com e Hoteis.com bloquearam o acesso. Distâncias em linha reta até o ICC; a posição de aluguéis é aproximada. Trajeto calculado com OSRM e o folheto de tarifas TfNSW 2026. Reais pelo câmbio comercial de 10/11/2026 (open.er-api.com); a fatura do cartão terá IOF e spread.</p>
+    <p><b>2 pessoas (coleta de 04/11/2026):</b> Booking.com (busca por bairro, nota ≥ 7), Airbnb (2 camas ou mais, diária até A$ 280), Hostelworld (em euro) e Google Hotels (Haymarket e Ultimo). Notas do Booking de 0 a 10 e do Airbnb de 0 a 5.</p>
+  </footer>
+</div>
+
+<script>
+const P=[
+ {id:15,g:4,baths:2,rooms:2,beds:3,ok:true,k:"ride",name:"Urban Rest North Sydney",area:"North Sydney, 1B Doohat Ave",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Cada quarto tem banheiro.",total:18532,cur:"BRL",rate:"9.0/10 (104) Booking",src:"Hoteis.com (cupom)",go:"A pé até a estação North Sydney (5 min). Trem T1 ou T9 até Town Hall (8 min). A pé até o ICC (10 min). Total: 25 a 30 min.",lat:-33.8395,lon:151.2065,url:"https://www.hoteis.com/ho2905468640/urban-rest-north-sydney-apartments-sydney-australia/?chkin=2026-12-03&chkout=2026-12-16&rm1=a4",q:"1B Doohat Ave North Sydney",canc:"Com cupom (Hoteis.com): confirme a política. Site direto: não reembolsável por A$ 5.550, ou reembolsável até 26/11 por A$ 6.139.",note:"Confirme que o preço com cupom é do apartamento de 2 quartos para 4 hóspedes. O apartamento de 3 quartos está esgotado. Hóspedes relatam fechadura da entrada quebrada e um vazamento (Trip.com)."},
+ {id:16,g:4,baths:1,rooms:3,beds:3,ok:true,k:"walk",name:"The Johns, casa em Ultimo",area:"Ultimo / Glebe",type:"3 quartos com 3 camas (tipos não informados). 1 banheiro. 108 m², com pátio.",total:6969,rate:"4.8/5 (12) Google",src:"Stayz",go:"A pé, 10 min.",lat:-33.8790,lon:151.1915,url:"https://www.google.com/travel/hotels/entity/ChkQ1ozQgYz-x95sGg0vZy8xMXp5d3l2bmJrEAI",q:"The Johns, terraço de 3 quartos Ultimo / Glebe Sydney",canc:"Não informado.",note:"Confirme os tipos de cama. Preço do Stayz, encontrado pelo Google Hotels."},
+ {id:17,g:4,baths:1,rooms:3,beds:4,ok:true,k:"walk",name:"Cozy Retreat, perto da Central",area:"Central / Surry Hills",type:"3 quartos com 4 camas (tipos não informados). 1 banheiro.",total:5557,rate:"4.4/5 (12) Google",src:"Hostaway (site direto)",go:"A pé, 15 min.",lat:-33.8804,lon:151.2092,url:"https://www.google.com/travel/hotels/entity/ChkQutXlssPLgM94Gg0vZy8xMXp6bGx5bm1yEAI",q:"Cozy Retreat, perto da Central Central / Surry Hills Sydney",canc:"Não informado.",note:"Confirme os tipos de cama. Só 12 avaliações. Reserva pelo site direto (Hostaway)."},
+ {id:18,g:4,baths:1.5,rooms:3,beds:4,ok:true,k:"walk",name:"Casa em Darlington",area:"Chippendale / Darlington",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Quarto 3: 1 queen. 1 banheiro e 1 lavabo. Garagem.",total:5098,rate:"4.52/5 (66) Airbnb",src:"Airbnb",go:"A pé, 30 min. Ou ônibus pela City Rd.",lat:-33.8931,lon:151.1906,url:"https://www.airbnb.com/rooms/988742713831636805?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Casa perto da Sydney Uni Chippendale / Darlington Sydney",canc:"Não informado.",note:"No Stayz, a mesma casa custa A$ 6.261."},
+ {id:19,g:4,baths:1,rooms:2,beds:2,k:"walk",name:"Bright 2-Bed, Pyrmont",area:"Pyrmont / Glebe",type:"2 quartos com 2 camas. 1 banheiro. 70 m².",total:5436,rate:"4.6/5 (24) Google",src:"MadeComfy (site direto)",go:"A pé, 17 min.",lat:-33.8752,lon:151.1845,url:"https://www.google.com/travel/hotels/entity/ChkQyeCDxMSQgOslGg0vZy8xMXl3MncxaHZ4EAI",q:"Bright 2-Bed, vista para a ponte Pyrmont / Glebe Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo. Stayz/Expedia: A$ 6.043."},
+ {id:20,g:4,baths:1,rooms:2,beds:2,k:"walk",name:"Chic Surry Hills Balcony Abode",area:"Surry Hills",type:"2 quartos com 2 camas. 1 banheiro. 65 m².",total:4446,rate:"3.7/5 (3) Google",src:"Stayz",go:"A pé, 25 min.",lat:-33.8894,lon:151.2091,url:"https://www.google.com/travel/hotels/entity/ChkQybWO4MXq0sxyGg0vZy8xMXhkdDV5dms4EAI",q:"Chic Surry Hills Balcony Abode Surry Hills Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo. Só 3 avaliações."},
+ {id:21,g:4,baths:null,rooms:2,beds:2,k:"walk",name:"Sydney CBD 2Bedroom Apartment",area:"CBD",type:"Quarto 1: 1 king. Quarto 2: 1 queen. Sofá-cama na sala.",total:4737,rate:"9.6/10 (38) Trip.com",src:"Trip.com",go:"A pé, 13 min.",lat:-33.8722,lon:151.2075,url:"https://us.trip.com/hotels/detail/?hotelId=19800810&checkIn=2026-12-03&checkOut=2026-12-16&adult=4&crn=1&curr=AUD",q:"Sydney CBD 2Bedroom Apartment CBD Sydney",canc:"Cancelamento grátis só nas primeiras 24 h após a reserva.",note:"Só 2 camas: não serve para o grupo. Posição no mapa aproximada."},
+ {id:22,g:4,baths:"c",rooms:2,beds:4,ok:true,k:"walk",name:"Maze Backpackers, 2 quartos twin",area:"Haymarket",type:"Cada quarto: 1 beliche. Banheiro compartilhado no corredor.",total:3853,rate:"8.0/10 (2.718) Agoda",src:"Agoda",go:"A pé, 12 min.",lat:-33.8800,lon:151.2072,url:"https://www.agoda.com/maze-backpackers-sydney/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"Maze Backpackers, 2 quartos twin Haymarket Sydney",canc:"Cancelamento grátis.",note:"O casal fica em beliche."},
+ {id:23,g:4,baths:"c",rooms:2,beds:4,ok:true,k:"walk",name:"790 on George, 2 quartos twin",area:"Haymarket",type:"Cada quarto: 2 camas de solteiro. Banheiro compartilhado no corredor.",total:4780,rate:"8.3/10 (3.088) Agoda",src:"Agoda",go:"A pé, 13 min.",lat:-33.8812,lon:151.2042,url:"https://www.agoda.com/790-on-george-backpackers/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"790 on George, 2 quartos twin Haymarket Sydney",canc:"Cancelamento grátis.",note:"O casal fica em camas de solteiro."},
+ {id:24,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"walk",name:"Little Drifter Glebe",area:"Glebe",type:"1 quarto privativo com 4 camas em beliche. Banheiro compartilhado no corredor.",total:2627,rate:"7.7/10 (426) Agoda",src:"Agoda",go:"A pé, 20 min.",lat:-33.8818,lon:151.1922,url:"https://www.agoda.com/little-drifter-glebe/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"Little Drifter Glebe Glebe Sydney",canc:"Não reembolsável.",note:"Preço convertido de US$ 1.801,70. No Trip.com: A$ 2.701. Posição no mapa aproximada."},
+ {id:25,g:4,baths:1,rooms:1,beds:2,k:"walk",name:"Mercure Sydney",area:"Haymarket",type:"1 quarto com 2 camas de casal. 1 banheiro.",total:7658,rate:"8.7/10 (1.040) Trip.com",src:"Trip.com",go:"A pé, 15 min.",lat:-33.8838,lon:151.2040,url:"https://www.agoda.com/mercure-sydney-hotel/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"Mercure Sydney Haymarket Sydney",canc:"Cancelamento grátis (Trip.com).",note:"Só 2 camas: não serve para o grupo. O link abre a Agoda, onde 2 quartos queen custam A$ 13.180."},
+ {id:26,g:4,baths:1,rooms:2,beds:2,k:"ride",name:"Alexandria, apto 5",area:"Alexandria",type:"2 quartos com 2 camas. 1 banheiro.",total:3529,rate:"4.0/5 (8) Google",src:"Bluepillow",go:"Trem até Central e light rail L1. Total: 30 min.",lat:-33.8968,lon:151.1988,url:"https://www.google.com/travel/hotels/entity/ChkQ26DanerD84wxGg0vZy8xMW45ZG13aG1kEAI",q:"Alexandria, Henderson Rd, apto 5 Alexandria Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo. Bluepillow só compara preços: a reserva é em outro site."},
+ {id:27,g:4,baths:2,rooms:2,beds:4,ok:true,k:"ride",name:"G901S Bright Zetland Escape",area:"Zetland",type:"2 quartos com 4 camas (tipos não informados). 2 banheiros. Até 5 pessoas.",total:3915,rate:"sem nota",src:"Felix (site direto)",go:"Trem de Green Square até Central e light rail L1. Total: 35 min.",lat:-33.9038,lon:151.2122,url:"https://www.google.com/travel/hotels/entity/ChkQxIPEkNLguYFxGg0vZy8xMWx6c21mYmdkEAI",q:"G901S Bright Zetland Escape Zetland Sydney",canc:"Não informado.",note:"Sem avaliações. Confirme os tipos de cama. Stayz/Expedia: A$ 4.592."},
+ {id:28,g:4,baths:null,rooms:1,beds:2,k:"ride",name:"Stay Today, quarto quádruplo",area:"Leichhardt (segundo o Trip.com)",type:"1 quarto com 2 camas de casal.",total:2850,rate:"8.2/10 (5) Trip.com",src:"Trip.com",go:"Ônibus, 30 min.",lat:-33.8835,lon:151.1570,url:"https://us.trip.com/hotels/detail/?hotelId=129258061&checkIn=2026-12-03&checkOut=2026-12-16&adult=4&crn=1&curr=AUD",q:"Stay Today, quarto quádruplo Leichhardt Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo. Confirme o endereço: no Booking, o hostel aparece em Redfern."},
+ {id:29,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"ride",name:"Urban Nomad Kings Cross",area:"Kings Cross",type:"1 quarto privativo com 4 camas em beliche. Banheiro compartilhado. Café da manhã incluído.",total:2999,rate:"7.5/10 (67) Trip.com",src:"Trip.com",go:"Trem T2 ou T4 de Kings Cross até Town Hall. A pé até o ICC (10 min). Total: 25 min.",lat:-33.8745,lon:151.2240,url:"https://us.trip.com/hotels/detail/?hotelId=130145343&checkIn=2026-12-03&checkOut=2026-12-16&adult=4&crn=1&curr=AUD",q:"Urban Nomad Kings Cross Kings Cross Sydney",canc:"Não informado.",note:"Nota 7.5."},
+ {id:30,g:4,baths:2,rooms:2,beds:2,k:"ride",name:"Modern 2BR, 12 Broome St",area:"Waterloo",type:"Quarto 1: 1 queen. Quarto 2: 1 queen. 2 banheiros.",total:4420,rate:"8.0/10 (1) Agoda",src:"Agoda",go:"Metrô de Waterloo até Gadigal ou Central. Total: 30 min.",lat:-33.9005,lon:151.2065,url:"https://www.agoda.com/modern-2br-2bath-apartment-waterloo-12-broome-st/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"Modern 2BR, 12 Broome St Waterloo Sydney",canc:"Cancelamento grátis.",note:"Só 2 camas: não serve para o grupo. Só 1 avaliação."},
+ {id:31,g:4,baths:1,rooms:1,beds:null,bx:"(king ou beliche)",ok:true,k:"ride",name:"Veriu Green Square",area:"Alexandria",type:"1 quarto (Quad Suite). Camas: king, beliche ou 2 de solteiro, conforme o quarto. 1 banheiro.",total:5781,rate:"9.1/10 (404) Trip.com",src:"Trip.com",go:"Trem de Green Square até Central e light rail L1. Total: 35 min.",lat:-33.9065,lon:151.2015,url:"https://us.trip.com/hotels/detail/?hotelId=29958862&checkIn=2026-12-03&checkOut=2026-12-16&adult=4&crn=1&curr=AUD",q:"Veriu Green Square Alexandria Sydney",canc:"Cancelamento grátis.",note:"Confirme que o quarto tem king + beliche (3 camas)."},
+ {id:32,g:4,baths:null,rooms:2,beds:2,k:"ride",name:"Meriton Suites Waterloo",area:"Waterloo",type:"Quarto 1: 1 king. Quarto 2: 1 king.",total:6317,rate:"8.5/10 (1.206) Agoda",src:"Agoda",go:"Metrô de Waterloo. Total: 30 min.",lat:-33.8990,lon:151.2070,url:"https://www.agoda.com/meriton-suites-waterloo/hotel/sydney-au.html?checkIn=2026-12-03&los=13&rooms=1&adults=4&currency=AUD",q:"Meriton Suites Waterloo Waterloo Sydney",canc:"Cancelamento grátis.",note:"Só 2 camas: não serve para o grupo. A busca da Agoda mostrou A$ 9.500: confirme o preço. Trip.com: A$ 6.650."},
+ {id:33,g:4,baths:2,rooms:2,beds:4,ok:true,k:"ride",name:"Stylish 2BR Waterloo 1203",area:"Waterloo",type:"Quarto 1: 1 queen e 1 de solteiro. Quarto 2: 1 queen e 1 de solteiro. 2 banheiros.",total:4396,rate:"sem avaliações",src:"Airbnb",go:"Metrô de Waterloo até Central e light rail L1. Total: 35 min.",lat:-33.90205,lon:151.21209,url:"https://www.airbnb.com/rooms/1567676630965694998?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Stylish 2BR Waterloo 1203 Waterloo Sydney",canc:"Não informado.",note:"Anúncio sem avaliações. O risco é maior."},
+ {id:34,g:4,baths:2,rooms:3,beds:3,bx:"+ sofá-cama",ok:true,k:"walk",name:"Urban Chic 3BR, Camperdown",area:"Camperdown",type:"Quarto 1: 1 queen. Quarto 2: 1 queen. Quarto 3: 1 queen e 1 sofá-cama. 2 banheiros. Estacionamento.",total:5545,rate:"4.87/5 (15) Airbnb",src:"Airbnb",go:"A pé, 30 a 35 min. Ou ônibus pela Parramatta Rd.",lat:-33.8851,lon:151.1794,url:"https://www.airbnb.com/rooms/1534756166069560983?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Urban Chic 3BR Retreat Camperdown Sydney",canc:"Não informado.",note:"Nota 4.87 com 15 avaliações."},
+ {id:35,g:4,baths:3.5,rooms:3,beds:4,ok:true,k:"ride",name:"Casa em Leichhardt, 3 suítes",area:"Leichhardt",type:"Quarto 1: 1 queen. Quarto 2: 1 queen. Quarto 3: 1 beliche. 3 banheiros e 1 lavabo.",total:6039,rate:"4.64/5 (14) Airbnb",src:"Airbnb",go:"Light rail L1 direto até Exhibition Centre. Confirme a distância a pé até a parada.",lat:-33.87949,lon:151.15444,url:"https://www.airbnb.com/rooms/1642579119704279614?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Leichhardt, 3 quartos com banheiro Leichhardt Sydney",canc:"Não informado.",note:"Uma avaliação diz que uma cama era sofá-cama."},
+ {id:36,g:4,baths:2.5,rooms:3,beds:4,bx:"+ 2 sofás-cama",ok:true,k:"ride",name:"North Sydney Green Valley 3B",area:"North Sydney",type:"Quarto 1: 1 king e 1 sofá-cama. Quarto 2: 2 de solteiro. Quarto 3: 1 king. Sofá-cama na sala. 2 banheiros e 1 lavabo.",total:6141,rate:"4.32/5 (34) Airbnb",src:"Airbnb",go:"Trem de North Sydney até Wynyard ou Town Hall. A pé até o ICC (15 min).",lat:-33.83658,lon:151.20358,url:"https://www.airbnb.com/rooms/1303246119926891503?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"North Sydney Green Valley 3B North Sydney Sydney",canc:"Não informado.",note:"Preço da busca. O anfitrião cobra A$ 55 para separar uma king em 2 de solteiro."},
+ {id:37,g:4,baths:1,rooms:2,beds:2,bx:"+ sofá-cama e colchão",k:"ride",name:"Heart of Newtown 2BR",area:"Erskineville",type:"Quarto 1: 1 de casal. Quarto 2: 1 de casal. Sofá-cama e colchão na sala. 1 banheiro.",total:6247,rate:"4.72/5 (18) Airbnb",src:"Airbnb",go:"Trem até Central ou Town Hall e caminhada.",lat:-33.9058,lon:151.1813,url:"https://www.airbnb.com/rooms/1663654906914095242?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Heart of Newtown 2BR Erskineville Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo."},
+ {id:38,g:4,baths:2,rooms:2,beds:4,ok:true,k:"ride",name:"The Newtowner",area:"Newtown",type:"Quarto 1: 1 queen. Quarto 2: 2 de solteiro. Cama de casal embutida (Murphy). 2 banheiros.",total:6614,rate:"4.66/5 (59) Airbnb",src:"Airbnb",go:"A pé até a estação Newtown (5 min). Trem até Town Hall. A pé até o ICC (12 min).",lat:-33.8937,lon:151.176,url:"https://www.airbnb.com/rooms/1203254852524683701?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"The Newtowner Newtown Sydney",canc:"Não informado.",note:"Preço com desconto. O preço normal é A$ 7.263."},
+ {id:39,g:4,baths:2.5,rooms:3,beds:4,bx:"+ 2 sofás-cama",ok:true,k:"ride",name:"Sobrado em Leichhardt",area:"Leichhardt",type:"Quarto 1: 1 queen. Quarto 2: 1 queen. Quarto 3: 2 de solteiro. 2 sofás-cama na sala. 2 banheiros e 1 lavabo.",total:7418,rate:"4.91/5 (57) Airbnb",src:"Airbnb",go:"Light rail L1 (paradas Lewisham West ou Taverners Hill).",lat:-33.88843,lon:151.14983,url:"https://www.airbnb.com/rooms/1306130338943171581?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Sobrado de 3 quartos em Leichhardt Leichhardt Sydney",canc:"Não informado.",note:"Nota 4.91 com 57 avaliações."},
+ {id:40,g:4,baths:2,rooms:3,beds:5,ok:true,k:"walk",name:"Casa em Surry Hills, 3 min da Central",area:"Surry Hills",type:"3 quartos com 5 camas (tipos não informados). 2 banheiros.",total:7644,rate:"4.75/5 (16) Airbnb",src:"Airbnb",go:"A pé, 25 min.",lat:-33.886,lon:151.20694,url:"https://www.airbnb.com/rooms/1665671311817636065?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"3 min da Central, para famílias Surry Hills Sydney",canc:"Não informado.",note:"Confirme os tipos de cama."},
+ {id:41,g:4,baths:2,rooms:2,beds:2,bx:"+ 2 sofás-cama",k:"walk",name:"Modern CBD 2BR, Hyde Park",area:"CBD",type:"Quarto 1: 1 queen. Quarto 2: 1 queen. 2 sofás-cama. 2 banheiros.",total:8615,rate:"4.83/5 (6) Airbnb",src:"Airbnb",go:"A pé, 15 min.",lat:-33.8747,lon:151.2088,url:"https://www.airbnb.com/rooms/1694638939620305369?check_in=2026-12-03&check_out=2026-12-16&adults=4",q:"Modern CBD 2BR, perto do Hyde Park CBD Sydney",canc:"Não informado.",note:"Só 2 camas: não serve para o grupo."},
+ {id:42,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"walk",name:"Mad Monkey on Broadway, dormitório de 4",area:"Ultimo / Broadway",type:"1 dormitório com 4 camas em beliche. Vocês reservam as 4 camas. Banheiro compartilhado no corredor.",total:1661,cur:"EUR",rate:"8.8/10 (2.365) Hostelworld",src:"Hostelworld",go:"A pé, 17 min.",lat:-33.8838,lon:151.196,url:"https://www.hostelworld.com/hostels/p/101683/mad-monkey-on-broadway/?from=2026-12-03&to=2026-12-16&guests=4",q:"Mad Monkey on Broadway, dorm de 4 inteiro Ultimo / Broadway Sydney",canc:"Não informado.",note:"O hostel não garante o mesmo quarto para as 4 camas. Peça isso por e-mail depois da reserva."},
+ {id:43,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"walk",name:"Home Backpackers, dormitório de 4",area:"Surry Hills / Central",type:"1 dormitório com 4 camas. Vocês reservam as 4 camas. Banheiro compartilhado no corredor.",total:1557,cur:"EUR",rate:"7.5/10 (914) Hostelworld",src:"Hostelworld",go:"A pé, 16 min.",lat:-33.88,lon:151.2095,url:"https://www.hostelworld.com/hostels/p/1966/home-backpackers/?from=2026-12-03&to=2026-12-16&guests=4",q:"Home Backpackers, dorm de 4 inteiro Surry Hills / Central Sydney",canc:"Cancelamento grátis com 2 dias ou mais de antecedência.",note:"Nota 7.5. Peça o mesmo quarto por e-mail."},
+ {id:44,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"walk",name:"Maze Backpackers, dormitório de 4",area:"Haymarket",type:"1 dormitório com 4 camas. Vocês reservam as 4 camas. Banheiro compartilhado no corredor.",total:1797,cur:"EUR",rate:"8.5/10 (2.724) Hostelworld",src:"Hostelworld",go:"A pé, 12 min.",lat:-33.8803,lon:151.2069,url:"https://www.hostelworld.com/hostels/p/908/the-maze-backpackers/?from=2026-12-03&to=2026-12-16&guests=4",q:"Maze Backpackers, dorm de 4 inteiro Haymarket Sydney",canc:"Não informado.",note:"Peça o mesmo quarto por e-mail."},
+ {id:45,g:4,baths:2,rooms:2,beds:4,ok:true,k:"walk",name:"Scape Redfern, 2 apartamentos",area:"Redfern",type:"2 apartamentos, cada um com 2 camas (tipos não informados) e banheiro próprio.",total:1863,cur:"EUR",rate:"sem avaliações",src:"Hostelworld",go:"A pé, 25 min.",lat:-33.891,lon:151.2003,url:"https://www.hostelworld.com/hostels/p/338525/scape-redfern/?from=2026-12-03&to=2026-12-16&guests=4",q:"Scape Redfern, 2 apartamentos Redfern Sydney",canc:"Não informado.",note:"Sem avaliações. Confirme o tipo de quarto antes de reservar."},
+ {id:46,g:4,baths:1,rooms:1,beds:4,ok:true,k:"walk",name:"Big Hostel, dormitório de 4 com banheiro",area:"Surry Hills / Central",type:"1 dormitório com 4 camas e banheiro próprio. Vocês reservam as 4 camas.",total:2610,cur:"EUR",rate:"9.3/10 (1.547) Hostelworld",src:"Hostelworld",go:"A pé, 16 min.",lat:-33.879,lon:151.2097,url:"https://www.hostelworld.com/hostels/p/7503/big-hostel/?from=2026-12-03&to=2026-12-16&guests=4",q:"Big Hostel, dorm de 4 com banheiro Surry Hills / Central Sydney",canc:"Não informado.",note:"Peça o mesmo quarto por e-mail."},
+ {id:47,g:4,baths:"c",rooms:1,beds:4,ok:true,k:"walk",name:"Wake Up! Sydney Central, dormitório de 4",area:"Haymarket",type:"1 dormitório com 4 camas. Vocês reservam as 4 camas. Banheiro compartilhado no corredor.",total:2636,cur:"EUR",rate:"9.2/10 (11.057) Hostelworld",src:"Hostelworld",go:"A pé, 14 min.",lat:-33.8822,lon:151.2062,url:"https://www.hostelworld.com/hostels/p/1704/wake-up-sydney-central/?from=2026-12-03&to=2026-12-16&guests=4",q:"Wake Up! Sydney Central, dorm de 4 Haymarket Sydney",canc:"Não informado.",note:"Nota 9.2 com 11 mil avaliações. Peça o mesmo quarto por e-mail."},
+ {id:48,g:4,baths:1,rooms:1,beds:3,bx:"estúdio",ok:true,k:"walk",name:"Accommodation Sydney Hyde Park",area:"East Sydney / Hyde Park",type:"1 estúdio de 35 m²: 1 queen, 1 de solteiro e 1 de solteiro dobrável. 1 banheiro.",total:15616,cur:"BRL",rate:"6.6/10 Decolar",src:"Decolar",go:"A pé, 25 min.",lat:-33.8765,lon:151.2125,url:"https://www.decolar.com/accommodations/detail/6848199/2026-12-03/2026-12-16/4",q:"Accommodation Sydney Hyde Park Sydney",canc:"Não reembolsável.",note:"Os 4 ficam no mesmo cômodo. Nota 6.6. 2 apartamentos de 1 quarto custam R$ 28.860."},
+ {id:49,g:4,baths:"c",rooms:2,beds:4,ok:true,k:"walk",name:"790 on George, 2 quartos twin (Decolar)",area:"Haymarket",type:"Cada quarto: 2 camas de solteiro. Banheiro compartilhado no corredor.",total:18088,cur:"BRL",rate:"sem nota capturada",src:"Decolar",go:"A pé, 13 min.",lat:-33.8814,lon:151.204,url:"https://www.decolar.com/accommodations/detail/2218529/2026-12-03/2026-12-16/2!2",q:"790 on George, 2 quartos twin (Decolar) Sydney",canc:"Não informado.",note:"Preço com desconto para quem faz login. Sem login: R$ 19.448. Pago em reais, sem IOF."},
+ {id:50,g:4,baths:1,rooms:1,beds:2,k:"walk",name:"Rydges World Square, quarto quádruplo",area:"Haymarket / CBD",type:"1 quarto de 28 m² com 2 camas de casal. 1 banheiro.",total:27988,cur:"BRL",rate:"9.4/10 Decolar",src:"Decolar",go:"A pé, 13 min.",lat:-33.8773,lon:151.2075,url:"https://www.decolar.com/accommodations/detail/2357028/2026-12-03/2026-12-16/4",q:"Rydges World Square, quarto quádruplo Sydney",canc:"Cancelamento grátis até 02/12. Nada a pagar agora.",note:"Só 2 camas: não serve para o grupo."},
+ {id:51,g:4,baths:1,rooms:1,beds:3,ok:true,k:"walk",name:"Rydges World Square, quarto família",area:"Haymarket / CBD",type:"1 quarto de 54 m²: 1 casal extragrande e 2 de solteiro. 1 banheiro.",total:37216,cur:"BRL",rate:"9.4/10 Decolar",src:"Decolar",go:"A pé, 13 min.",lat:-33.877,lon:151.2078,url:"https://www.decolar.com/accommodations/detail/2357028/2026-12-03/2026-12-16/4",q:"Rydges World Square, quarto família Sydney",canc:"Cancelamento grátis até 02/12. Nada a pagar agora.",note:"Os 4 ficam no mesmo quarto. Pago em reais, sem IOF."},
+ {id:52,g:4,baths:1,rooms:1,beds:2,k:"walk",name:"ibis World Square, quarto família",area:"Haymarket",type:"1 quarto de 29 m² com 2 camas king. 1 banheiro.",total:31944,cur:"BRL",rate:"8.2/10 Decolar",src:"Decolar",go:"A pé, 13 min.",lat:-33.8779,lon:151.2068,url:"https://www.decolar.com/accommodations/detail/264842/2026-12-03/2026-12-16/4",q:"ibis Sydney World Square, quarto família Sydney",canc:"Não reembolsável.",note:"Só 2 camas: não serve para o grupo."}
+];
+const TRANSPORT=100, TRANSPORT4=190;
+/* câmbio comercial de 10/11/2026 (open.er-api.com); a fatura do cartão terá IOF e spread */
+const FX={AUD:3.8058,EUR:6.1768,BRL:1};
+const brl=(v,cur)=>Math.round(v*FX[cur||"AUD"]);
+const R=v=>"R$ "+v.toLocaleString("pt-BR");
+const fmtOrig=p=>p.cur==="BRL"?(p.src==="Decolar"?"pago em R$, sem IOF":"preço em R$, com cupom"):(p.cur==="EUR"?"€ ":"A$ ")+p.total.toLocaleString("pt-BR");
+const fmt=p=>R(brl(p.total,p.cur));
+const siteName=p=>p.url.includes("google.com/travel")?"Google Hotels":p.url.includes("trip.com")?"Trip.com":p.url.includes("agoda")?"Agoda":p.src;
+const mapUrl=p=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.g===4?p.lat+","+p.lon:p.q);
+const links=(p,cls="tlinks")=>`<span class="${cls}"><a href="${p.url}" target="_blank" rel="noopener">Ver no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Mapa</a></span>`;
+
+/* ---------- mapa (Leaflet + OpenStreetMap/CARTO) ---------- */
+const ICC={lat:-33.8746,lon:151.1990};
+const lmap=L.map("lmap",{scrollWheelZoom:false,zoomControl:true}).setView([ICC.lat,ICC.lon],13);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:'Mapa &copy; Esri, HERE, Garmin, &copy; OpenStreetMap'}).addTo(lmap);
+for(const [m,lab] of [[1200,"15 min a pé"],[2400,"30 min a pé"]]){
+  L.circle([ICC.lat,ICC.lon],{radius:m,color:"#4b3fd1",weight:1.3,dashArray:"5 5",fill:false,interactive:false}).addTo(lmap);
+}
+L.marker([ICC.lat,ICC.lon],{icon:L.divIcon({className:"iccmk",html:"ICC",iconSize:[34,34],iconAnchor:[17,17]}),zIndexOffset:1000,title:"ICC Sydney"}).addTo(lmap).bindTooltip("ICC Sydney, 14 Darling Dr",{direction:"top",offset:[0,-16]});
+const MK={};
+function makeMarker(p){
+  const icon=L.divIcon({className:"",html:`<span class="lmk ${p.k}${p.ok?" ok":""}">${p.id}</span>`,iconSize:[28,28],iconAnchor:[14,14]});
+  const m=L.marker([p.lat,p.lon],{icon,title:p.name,keyboard:true});
+  const per=pp(p);
+  m.bindTooltip(`<b>${p.id}. ${p.name}</b><br>${p.area} · ${rb(p)}<br>${per?R(per)+" por pessoa":"—"} · ${p.ok?"3+ camas":"só 2 camas"}`,{direction:"top",offset:[0,-14]});
+  m.on("click",()=>select(p.id,true));
+  MK[p.id]=m;return m;
+}
+const layer=L.layerGroup().addTo(lmap);
+document.getElementById("z-all").addEventListener("click",()=>fitVisible());
+function fitVisible(){const ids=[...document.querySelectorAll(".card")].map(c=>+c.id.slice(1));const pts=ids.map(i=>MK[i].getLatLng());pts.push(L.latLng(ICC.lat,ICC.lon));lmap.fitBounds(L.latLngBounds(pts),{padding:[24,24],maxZoom:15})}
+/* o mapa fica fixo ao lado da lista; recalcula o tamanho quando a janela muda */
+window.addEventListener("resize",()=>lmap.invalidateSize());
+
+/* ---------- lista ---------- */
+const hav=(a,b)=>{const R0=6371,toR=x=>x*Math.PI/180,dl=toR(b.lat-a.lat),dn=toR(b.lon-a.lon);const h=Math.sin(dl/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dn/2)**2;return 2*R0*Math.asin(Math.sqrt(h))};
+P.forEach(p=>{p.km=hav(ICC,p);p.brlTotal=p.total?brl(p.total,p.cur):null;p.trBrl=p.k==="ride"?brl(TRANSPORT4):0;
+  const m=/([\d.]+)\/(\d+)/.exec(p.rate||"");p.score=m?(+m[1])/(+m[2])*10:0});
+const plural=(n,a,b)=>n+" "+(n===1?a:b);
+const rb=p=>(p.rooms===1&&p.bx==="estúdio"?"estúdio":plural(p.rooms,"quarto","quartos"))+" · "+(p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas"))+(p.bx&&p.bx!=="estúdio"?" "+p.bx:"")+" · "+bath(p);
+const bath=p=>p.baths==="c"?"banheiro compartilhado":p.baths==null?"banheiros a confirmar":(()=>{const n=Math.floor(p.baths),h=p.baths%1;return plural(n,"banheiro","banheiros")+(h?" + lavabo":"")})();
+const km=p=>p.km.toFixed(1).replace(".",",")+" km do ICC";
+const pp=p=>p.total?Math.round((p.brlTotal+p.trBrl)/4):null;
+P.forEach(makeMarker);
+
+function card(p){
+  const d=document.createElement("article");
+  d.className="card";d.id="c"+p.id;
+  const kTag=p.k==="walk"?'<span class="tag walk">A pé</span>':'<span class="tag ride">Transporte</span>';
+  const okTag=p.ok?'<span class="tag own">3+ camas</span>':'<span class="tag pax2">Só 2 camas</span>';
+  const per=pp(p);
+  d.innerHTML=`<span class="num ${p.k}${p.ok?" ok":""}">${p.id}</span>
+   <div class="main">
+     <div class="name">${p.name}</div>
+     <div class="rb"><span>🚪 ${plural(p.rooms,"quarto","quartos")}${p.bx==="estúdio"?" (estúdio)":""}</span><span>🛏 ${p.beds==null?"camas a confirmar":plural(p.beds,"cama","camas")}${p.bx&&p.bx!=="estúdio"?" "+p.bx:""}</span><span>🚿 ${bath(p)}</span></div>
+     <div class="meta">${p.area} · ${km(p)} em linha reta</div>
+     <dl class="facts2">
+       <dt>Camas</dt><dd>${p.type}</dd>
+       <dt>Trajeto até o ICC</dt><dd>${p.go}</dd>
+       <dt>Cancelamento</dt><dd>${p.canc}</dd>
+       ${p.note?`<dt>Atenção</dt><dd>${p.note}</dd>`:""}
+     </dl>
+     <div class="tags">${okTag}${kTag}<span class="tag src">${p.src}</span></div>
+   </div>
+   <div class="price">
+     <span class="pp">${R(per)}</span><span class="n">por pessoa${p.trBrl?", com transporte":""}</span>
+     <span class="tt">${fmt(p)} no total</span>
+     <span class="n">${fmtOrig(p)} · 13 noites</span>
+     <span class="r">★ ${p.rate}</span>
+   </div>
+   <div class="links"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="${mapUrl(p)}" target="_blank" rel="noopener">Google Maps</a></div>`;
+  d.addEventListener("click",e=>{if(e.target.closest("a"))return;select(p.id,false)});
+  d.addEventListener("mouseenter",()=>hl(p.id,true));d.addEventListener("mouseleave",()=>hl(p.id,false));
+  return d;
+}
+function hl(id,on){const el=MK[id]&&MK[id].getElement();if(el)el.firstElementChild.classList.toggle("hot",on)}
+function select(id,fromMap){
+  document.querySelectorAll(".card.on").forEach(c=>c.classList.remove("on"));
+  document.querySelectorAll(".lmk.sel").forEach(c=>c.classList.remove("sel"));
+  const c=document.getElementById("c"+id);
+  if(c){c.classList.add("on");if(fromMap)c.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"})}
+  const m=MK[id];if(m){m.getElement()?.firstElementChild.classList.add("sel");m.setZIndexOffset(900);if(!fromMap)lmap.panTo(m.getLatLng());m.openTooltip()}
+}
+
+const state={f:"ok",sort:"price"};
+const SHOW={all:()=>true,ok:p=>p.ok,walk:p=>p.ok&&p.k==="walk",ride:p=>p.ok&&p.k==="ride"};
+const SORT={price:(a,b)=>(a.brlTotal+a.trBrl)-(b.brlTotal+b.trBrl),dist:(a,b)=>a.km-b.km,rate:(a,b)=>b.score-a.score};
+function render(){
+  document.querySelectorAll(".filters button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===state.f?"true":"false"));
+  const show=SHOW[state.f]||SHOW.ok;
+  const list=document.getElementById("list");list.innerHTML="";
+  const items=P.filter(show).sort(SORT[state.sort]);
+  items.forEach(p=>list.appendChild(card(p)));
+  document.getElementById("count").textContent=`${items.length} ${items.length===1?"opção":"opções"}`;
+  layer.clearLayers();items.forEach(p=>layer.addLayer(MK[p.id]));
+  try{localStorage.setItem("hs4-state",JSON.stringify(state))}catch(e){}
+}
+
+function costTable4(){
+  const rows=P.filter(p=>p.ok).map(p=>({p,d:p.brlTotal,t:p.trBrl,sum:p.brlTotal+p.trBrl})).sort((a,b)=>a.sum-b.sum);
+  const max=Math.max(...rows.map(r=>r.sum));
+  document.querySelector("#costtable4 tbody").innerHTML=rows.map(r=>`<tr>
+    <td><b>${r.p.id}.</b> ${r.p.name} <span class="rbs">${rb(r.p)}</span>${links(r.p)}<div class="bar ${r.p.k}" style="width:${(r.sum/max*100).toFixed(1)}%"></div></td>
+    <td class="r mono">R$ ${r.d.toLocaleString("pt-BR")}</td>
+    <td class="r mono">${r.t?"+ R$ "+r.t.toLocaleString("pt-BR"):"R$ 0"}</td>
+    <td class="r mono"><b>R$ ${r.sum.toLocaleString("pt-BR")}</b></td>
+    <td class="r mono"><b>R$ ${Math.round(r.sum/4).toLocaleString("pt-BR")}</b></td></tr>`).join("");
+}
+
+/* destaques */
+const PICKS=[
+ {id:15,cls:"p1",k:"Minha escolha",why:"O casal fica com a queen no quarto 1. Os solteiros ficam com as 2 camas de solteiro no quarto 2. Cada quarto tem banheiro. Nota 9.0 com 104 avaliações. O trem leva 25 a 30 min até o ICC. Antes de reservar, confirme que o cupom vale para 2 quartos e 4 hóspedes."},
+ {id:18,cls:"p2",k:"Mesmo preço, a pé",why:"3 quartos: o casal fica com uma queen e cada solteiro pode ter um quarto. O ICC fica a 30 min a pé, sem custo de transporte. 1 banheiro e 1 lavabo. Nota 4.52 com 66 avaliações.",alt:34,altTxt:"Alternativa com nota maior (3 queens)"},
+ {id:33,cls:"p3",k:"Mais barato com quarto para o casal",why:"2 quartos, cada um com 1 queen e 1 de solteiro. 2 banheiros. Metrô e light rail até o ICC (35 min). O anúncio não tem avaliações: o risco é maior."},
+ {id:42,cls:"p4",k:"Mais barato de todos",why:"Vocês reservam as 4 camas de um dormitório de hostel (beliches). O banheiro é compartilhado com o andar. O ICC fica a 17 min a pé. Nota 8.8 com 2.365 avaliações. O casal fica em beliche.",alt:44,altTxt:"Mais perto do ICC (12 min a pé)"}
+];
+function picks(){
+  document.getElementById("verdict4").innerHTML=PICKS.map(k=>{const p=P.find(x=>x.id===k.id);const a=k.alt&&P.find(x=>x.id===k.alt);
+    return `<article class="pick ${k.cls}">
+      <span class="k">${k.k}</span>
+      <h3>${p.name}</h3>
+      <span class="rbs">${rb(p)}</span>
+      <div class="money"><div><span class="lbl">Por pessoa</span><span class="big mono">${R(pp(p))}</span></div>
+        <div><span class="lbl">Total para 4</span><span class="mid mono">${R(p.brlTotal+p.trBrl)}</span><small>${fmtOrig(p)}${p.trBrl?" + transporte":""}</small></div></div>
+      <p>${k.why}</p>
+      ${a?`<p class="altp">${k.altTxt}: <b>${a.name}</b>, ${R(pp(a))} por pessoa.</p>`:""}
+      <div class="plinks"><a href="${p.url}" target="_blank" rel="noopener">Abrir no ${siteName(p)}</a><a href="#lista" data-go="${p.id}">Ver no mapa</a>${a?`<a href="${a.url}" target="_blank" rel="noopener">${a.name.split(",")[0]} no ${siteName(a)}</a>`:""}</div>
+    </article>`}).join("");
+  document.querySelectorAll("[data-go]").forEach(x=>x.addEventListener("click",e=>{const id=+x.dataset.go;state.f="all";render();setTimeout(()=>select(id,true),350)}));
+}
+
+try{Object.assign(state,JSON.parse(localStorage.getItem("hs4-state")||"{}"))}catch(e){}
+if(!SHOW[state.f])state.f="ok"; if(!SORT[state.sort])state.sort="price";
+document.getElementById("sort").value=state.sort;
+render();fitVisible();
+costTable4();
+picks();
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{state.f=b.dataset.f;render();fitVisible()}));
+document.getElementById("sort").addEventListener("change",e=>{state.sort=e.target.value;render()});
+</script>
